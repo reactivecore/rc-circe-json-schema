@@ -10,11 +10,14 @@ Note: the validator is in early state and API may not be stable.
 
 - Implementing JSON Schema 2020-12
 - All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing (except `unknownKeyword.json`)
+  
+  **Update:** Some tests in newer versions of the Test Suite are failing.
+
 - You can bring your own Downloader (using Tagless Final Pattern)
 
 ## Known Limitations
 
-- `dynamicRef` and `dynamicAnchor` are very rough implementations
+- `dynamicRef` and `dynamicAnchor` are very rough implemented, do not trust them.
 - JSON Pointers to elements outside of `$defs` are not fully implemented, except when required by the test suite.
 - Only JSON Schema 2020-12 and one Circe-Version supported so far.
 - The API won't be stable.
