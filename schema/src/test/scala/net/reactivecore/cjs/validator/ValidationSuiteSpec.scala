@@ -12,7 +12,15 @@ class ValidationSuiteSpec extends TestBase {
     "unknownKeyword.json" // Unknown properties are not serialized again
   )
 
-  ValidationSuite.suite2020_12.foreach { case (name, suite) =>
+  val unsupported = Seq(
+    "vocabulary.json"
+  )
+
+  val tests = ValidationSuite.suite2020_12.filterNot { case (name, _) =>
+    unsupported.contains(name)
+  }
+
+  tests.foreach { case (name, suite) =>
     it should s"Parse and serialize ${name}" in {
       suite.foreach { schemaTest =>
         val schema = schemaTest.schema.as[Schema] match {

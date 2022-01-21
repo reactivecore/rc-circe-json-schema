@@ -9,7 +9,7 @@ Note: the validator is in early state and API may not be stable.
 ## Features
 
 - Implementing JSON Schema 2020-12
-- All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing (except `unknownKeyword.json`)
+- All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing (except `unknownKeyword.json`, `vocabulary.json`)
   
   **Update:** Some tests in newer versions of the Test Suite are failing.
 
@@ -18,6 +18,8 @@ Note: the validator is in early state and API may not be stable.
 ## Known Limitations
 
 - `dynamicRef` and `dynamicAnchor` are very rough implemented, do not trust them.
+- Unknown Keywords are ignored and won't be serialized.
+- No support for `$vocabulary`
 - JSON Pointers to elements outside of `$defs` are not fully implemented, except when required by the test suite.
 - Only JSON Schema 2020-12 and one Circe-Version supported so far.
 - The API won't be stable.
