@@ -24,13 +24,9 @@ object LogicRestrictions {
   implicit lazy val validationProvider: ValidationProvider[LogicRestrictions] = ValidationProvider.withUri {
     (parentId, path, restrictions) =>
       allOf(
-        logicChain(parentId, path, restrictions.oneOf, x => OneOfValidator(x.toVector)),
-        logicChain(parentId, path, restrictions.anyOf, x => AnyOfValidator(x.toVector)),
-        restrictions.allOf
-          .map { schemas =>
-            AllOfValidator(schemas.map(_.validator(parentId, path)))
-          }
-          .getOrElse(Validator.success),
+        logicChain(parentId, path.enterObject("oneOf"), restrictions.oneOf, x => OneOfValidator(x.toVector)),
+        logicChain(parentId, path.enterObject("anyOf"), restrictions.anyOf, x => AnyOfValidator(x.toVector)),
+        logicChain(parentId, path.enterObject("allOf"), restrictions.allOf, x => AllOfValidator(x.toVector)),
         restrictions.not
           .map { schema =>
             NotValidator(schema.validator(parentId, path))
@@ -46,7 +42,7 @@ object LogicRestrictions {
     withoutTrue.size match {
       case 0 => Validator.success
       case 1 => withoutTrue.head
-      case _ => AllOfValidator(withoutTrue)
+      case _ => AllOfValidator(withoutTrue.toVector)
     }
   }
 
@@ -69,8 +65,12 @@ object LogicRestrictions {
       combiner: Seq[Validator] => Validator
   ): Validator = {
     input match {
-      case None          => Validator.success
-      case Some(schemas) => combiner(schemas.map(_.validator(parentId, path)))
+      case None => Validator.success
+      case Some(schemas) =>
+        val validators = schemas.zipWithIndex.map { case (schema, idx) =>
+          schema.validator(parentId, path.enterArray(idx))
+        }
+        combiner(validators)
     }
   }
 }
