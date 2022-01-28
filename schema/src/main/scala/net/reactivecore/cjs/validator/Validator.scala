@@ -109,7 +109,11 @@ object Validator {
   }
 
   /** A Success validator. */
-  val success: ContextFreeValidator = (state: ValidationState, _: Json) => (state, ValidationResult.success)
+  case object Success extends ContextFreeValidator {
+    override def validate(state: ValidationState, json: Json): (ValidationState, ValidationResult) =
+      (state, ValidationResult.success)
+  }
+  val success: ContextFreeValidator = Success
 
   /** Sequence of validators
     * Note: in contrast to allOf this parallel validators can be combined.

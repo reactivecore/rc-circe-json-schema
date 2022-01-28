@@ -74,8 +74,7 @@ case class DocumentValidator(
           // (See dynamicRef.json acceptance test)
           resolve(refUri)
         case Some(existing) =>
-          // Look for oldest overwrite ?!
-          // This also doesn't seem to be OK in case of relocations.
+          // Look for oldest overwrite
           val oldestOverwrite = state.stack.reverse.collectFirst {
             case element if element.dynamicAnchors.contains(fragment) => element.dynamicAnchors(fragment)
           }

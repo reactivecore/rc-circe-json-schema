@@ -61,7 +61,7 @@ case class OneOfValidator(validators: Vector[Validator]) extends Compound(valida
   }
 }
 
-case class AllOfValidator(validations: Seq[Validator]) extends Validator {
+case class AllOfValidator(validations: Vector[Validator]) extends Compound(validations) {
   override def validateStateful(state: ValidationState, json: Json)(
       implicit context: ValidationContext
   ): (ValidationState, ValidationResult) = {
@@ -78,6 +78,12 @@ case class AllOfValidator(validations: Seq[Validator]) extends Validator {
         resultingState -> ValidationResult.success
       case Some(errors) =>
         state -> errors
+    }
+  }
+
+  override def touch(state: ValidationState): ValidationState = {
+    validations.foldLeft(state) { case (state, child) =>
+      child.touch(state)
     }
   }
 

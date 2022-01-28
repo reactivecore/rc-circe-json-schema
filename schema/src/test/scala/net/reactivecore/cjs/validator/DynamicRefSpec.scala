@@ -107,4 +107,39 @@ class DynamicRefSpec extends ValidatorTestBase {
   "schema3" should "deny a float" in {
     testSchemaValidation(schema3, """{ "november": 1.1 }""", false)
   }
+
+  val schema4 =
+    """{
+      |            "$id": "http://localhost:1234/strict-extendible-allof-defs-first.json",
+      |            "allOf": [
+      |                {
+      |                    "$ref": "extendible-dynamic-ref.json"
+      |                },
+      |                {
+      |                    "$defs": {
+      |                        "elements": {
+      |                            "$dynamicAnchor": "elements",
+      |                            "properties": {
+      |                                "a": true
+      |                            },
+      |                            "required": ["a"],
+      |                            "additionalProperties": false
+      |                        }
+      |                    }
+      |                }
+      |            ]
+      |        }
+      |""".stripMargin
+
+  "schema4" should "deny weird values" in {
+    testSchemaValidation(schema4, """{"a": true}""", false)
+  }
+
+  it should "it deny values which are from the overriden schemas" in {
+    testSchemaValidation(schema4, """{"elements": [{ "b": 1 }]}""".stripMargin, false)
+  }
+
+  it should "accept correct values" in {
+    testSchemaValidation(schema4, """{"elements": [{ "a": 1 }]}""".stripMargin, true)
+  }
 }
