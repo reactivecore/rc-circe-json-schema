@@ -1,6 +1,8 @@
 Reactive Core Circe JSON Validator
 ==================================
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.reactivecore/circe-json-schema_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.reactivecore/circe-json-schema_2.13)
+
 This is a Scala implementation of a [JSON Schema](https://json-schema.org/) validator based upon the 
 great [io.circe](https://circe.github.io/circe/) Library.
 
