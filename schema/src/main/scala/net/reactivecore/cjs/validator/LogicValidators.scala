@@ -81,6 +81,12 @@ case class AllOfValidator(validations: Vector[Validator]) extends Compound(valid
     }
   }
 
+  override def touch(state: ValidationState): ValidationState = {
+    validations.foldLeft(state) { case (state, child) =>
+      child.touch(state)
+    }
+  }
+
   override def precedence: Int = -1
 }
 

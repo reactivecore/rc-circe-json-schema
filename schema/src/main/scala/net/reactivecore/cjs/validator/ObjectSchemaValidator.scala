@@ -15,11 +15,16 @@ case class ObjectSchemaValidator(
   override def touch(state: ValidationState): ValidationState = {
     idOverride match {
       case None =>
-        underlying.touch(addDynamicAnchor(state))
-      case Some(id) =>
-        // It would be popped anyway
+        forceTouch(state)
+      case Some(_) =>
+        // There is a document change
         state
     }
+  }
+
+  private def forceTouch(state: ValidationState): ValidationState = {
+    val withDynamicAnchor = addDynamicAnchor(state)
+    underlying.touch(withDynamicAnchor)
   }
 
   private def addDynamicAnchor(state: ValidationState): ValidationState = {
@@ -36,11 +41,12 @@ case class ObjectSchemaValidator(
   ): (ValidationState, ValidationResult) = {
     idOverride match {
       case None =>
-        val withAnchor = addDynamicAnchor(state)
-        underlying.validateStateful(withAnchor, json)
+        // Already Touched
+        underlying.validateStateful(state, json)
       case Some(id) =>
-        val pushed = addDynamicAnchor(state.pushState(id))
-        val (resultState, violations) = underlying.validateStateful(pushed, json)
+        val pushed = state.pushState(id)
+        val beingTouched = forceTouch(pushed)
+        val (resultState, violations) = underlying.validateStateful(beingTouched, json)
         (resultState.popState(), violations)
     }
   }
