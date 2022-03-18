@@ -10,7 +10,7 @@ private[cjs] object SchemaCodec {
   )
 
   lazy val schemaCodec: Codec[Schema] = {
-    val base = Codecs.disjunctEitherCodec(BooleanSchema.codec, ObjectSchema.codec)
+    val base = Codecs.disjunctEitherCodec[BooleanSchema, ObjectSchema]
     Codec.from(
       base.map {
         case Left(left)   => left

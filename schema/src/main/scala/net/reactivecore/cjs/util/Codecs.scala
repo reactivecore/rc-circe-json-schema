@@ -88,22 +88,24 @@ object Codecs {
   }
 
   def disjunctEitherCodec[L, R](
-      implicit left: Codec[L],
-      right: Codec[R]
+      implicit leftE: Encoder[L],
+      leftD: Decoder[L],
+      rightE: Encoder[R],
+      rightD: Decoder[R]
   ): Codec[Either[L, R]] = {
     new Codec[Either[L, R]] {
       override def apply(c: HCursor): Result[Either[L, R]] = {
-        left(c) match {
+        leftD(c) match {
           case Right(ok) => Right(Left(ok))
           case Left(_) =>
-            right(c).map(Right(_))
+            rightD(c).map(Right(_))
         }
       }
 
       override def apply(a: Either[L, R]): Json = {
         a match {
-          case Left(l)  => left(l)
-          case Right(r) => right(r)
+          case Left(l)  => leftE(l)
+          case Right(r) => rightE(r)
         }
       }
     }

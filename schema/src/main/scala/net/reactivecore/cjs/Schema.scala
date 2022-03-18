@@ -109,11 +109,20 @@ object ObjectSchema {
     val definitionsValidator = Definitions.validationProvider(id, path, os.definitions)
     val underlying = Validator.sequence(locationValidator, refValidator, definitionsValidator, restrictionValidator)
 
+    val dynamicAnchor = os.ref.dynamicAnchor.orElse {
+      if (os.ref.recursiveAnchor.contains(true)) {
+        // For 2019_09, only blank name allowed
+        Some("")
+      } else {
+        None
+      }
+    }
+
     ObjectSchemaValidator(
       path,
       underlying,
       fragment = os.ref.anchor,
-      dynamicFragment = os.ref.dynamicAnchor,
+      dynamicFragment = dynamicAnchor,
       idOverride = os.location.id
     )
   }

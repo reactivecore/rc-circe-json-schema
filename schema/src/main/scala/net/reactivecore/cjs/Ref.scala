@@ -18,8 +18,14 @@ case class Ref(
     ref: Option[RefUri] = None,
     anchor: Option[String] = None,
     dynamicRef: Option[RefUri] = None,
-    dynamicAnchor: Option[String] = None
-)
+    dynamicAnchor: Option[String] = None,
+    recursiveAnchor: Option[Boolean] = None, // 2019_09
+    recursiveRef: Option[RefUri] = None // 2019_09
+) {
+
+  /** Use either dynamicRef or resursive Ref (compatibility reasons) */
+  def effectiveDynamicRef: Option[RefUri] = dynamicRef.orElse(recursiveRef)
+}
 
 object Ref {
   implicit val refEncoder: Encoder.AsObject[Ref] = Encoder.AsObject.instance[Ref] { value =>
@@ -27,7 +33,9 @@ object Ref {
       "$ref" -> value.ref.asJson,
       "$anchor" -> value.anchor.asJson,
       "$dynamicRef" -> value.dynamicRef.asJson,
-      "$dynamicAnchor" -> value.dynamicAnchor.asJson
+      "$dynamicAnchor" -> value.dynamicAnchor.asJson,
+      "$recursiveAnchor" -> value.recursiveAnchor.asJson,
+      "$recursiveRef" -> value.recursiveRef.asJson
     )
   }
 
@@ -37,7 +45,9 @@ object Ref {
       anchor <- json.get[Option[String]]("$anchor")
       dynamicRef <- json.get[Option[RefUri]]("$dynamicRef")
       dynamicAnchor <- json.get[Option[String]]("$dynamicAnchor")
-    } yield Ref(ref, anchor, dynamicRef, dynamicAnchor)
+      recursiveAnchor <- json.get[Option[Boolean]]("$recursiveAnchor")
+      recursiveRef <- json.get[Option[RefUri]]("$recursiveRef")
+    } yield Ref(ref, anchor, dynamicRef, dynamicAnchor, recursiveAnchor, recursiveRef)
   }
 
   implicit lazy val refCodec: Codec.AsObject[Ref] = Codecs.withoutNulls(Codec.AsObject.from(refDecoder, refEncoder))
@@ -73,7 +83,7 @@ object Ref {
           val fullPath = parentId.resolve(ref)
           RefValidator(ref, fullPath)
         },
-        instance.dynamicRef.map { dynamicRef =>
+        instance.effectiveDynamicRef.map { dynamicRef =>
           val fullPath = parentId.resolve(dynamicRef)
           DynamicRefValidator(dynamicRef, fullPath)
         }

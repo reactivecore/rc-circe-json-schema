@@ -10,7 +10,7 @@ Note: the validator is in early state and API may not be stable.
 
 ## Features
 
-- Implementing JSON Schema 2020-12
+- Implementing JSON Schema 2020-12, 2019-09
 - All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing (except `unknownKeyword.json`, `vocabulary.json`)
 - You can bring your own Downloader (using Tagless Final Pattern)
 
@@ -20,7 +20,7 @@ Note: the validator is in early state and API may not be stable.
 - Unknown Keywords are ignored and won't be serialized again.
 - No support for `$vocabulary`
 - JSON Pointers to elements outside of `$defs` are not fully implemented, except when required by the test suite.
-- Only JSON Schema 2020-12 and one Circe-Version supported so far.
+- Only JSON Schema 2020-12, 2019-09 and one Circe-Version supported so far.
 - The API won't be stable.
 
 ## Security Considerations
@@ -54,4 +54,4 @@ The library is released under terms of Apache License 2.0
 `3rdparty` contans 3rd-Party references
 
 - `JSON-Schema-Test-Suite`, licensed under terms of MIT-License
-- `schema` contains the JSON Schema of JSON Schema 2020-12, released unter terms of BSD-License.
+- `schema` contains the JSON Schemas of JSON Schema, released unter terms of BSD-License.

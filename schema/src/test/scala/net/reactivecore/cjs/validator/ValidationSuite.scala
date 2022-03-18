@@ -32,8 +32,8 @@ object ValidationSuite {
 
   type TestSuite = Vector[SchemaTest]
 
-  lazy val suite2020_12: Vector[(String, TestSuite)] = {
-    val testDirectory = "3rdparty/JSON-Schema-Test-Suite/tests/draft2020-12"
+  def load(name: String): Vector[(String, TestSuite)] = {
+    val testDirectory = s"3rdparty/JSON-Schema-Test-Suite/tests/${name}"
     val files = FileUtils.listFiles(new File(DownloaderMock.baseDir, testDirectory), Array("json"), false).asScala
     files
       .map { file =>
