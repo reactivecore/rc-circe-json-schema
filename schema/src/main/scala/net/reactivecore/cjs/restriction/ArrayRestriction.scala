@@ -8,7 +8,7 @@ import net.reactivecore.cjs.validator.array._
 import net.reactivecore.cjs.Schema
 
 case class ArrayRestriction(
-    items: Option[Schema] = None,
+    items: Option[Either[Schema, Vector[Schema]]] = None, // Left: V2020_12, Right: V2019_09
     contains: Option[Schema] = None,
     minItems: Option[Long] = None,
     maxItems: Option[Long] = None,
@@ -16,18 +16,35 @@ case class ArrayRestriction(
     unevaluatedItems: Option[Schema] = None,
     prefixItems: Option[Vector[Schema]] = None,
     minContains: Option[Int] = None,
-    maxContains: Option[Int] = None
-)
+    maxContains: Option[Int] = None,
+    additionalItems: Option[Schema] = None // V2019_09
+) {
+
+  /** Effective value of prefixItems across versions */
+  def effectivePrefixItems: Option[Vector[Schema]] = prefixItems.orElse(
+    items.flatMap(_.right.toOption)
+  )
+
+  /** Effective value of items across versions */
+  def effectiveItems: Option[Schema] = items
+    .flatMap(_.left.toOption)
+    .orElse(
+      additionalItems
+    )
+}
 
 object ArrayRestriction {
+  private implicit def eitherSchemaOrArrayCodec: Codec[Either[Schema, Vector[Schema]]] =
+    Codecs.disjunctEitherCodec[Schema, Vector[Schema]]
+
   implicit lazy val codec: Codec.AsObject[ArrayRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
 
   implicit val validationProvider: ValidationProvider[ArrayRestriction] = ValidationProvider.withUri {
     (parentId, path, restriction) =>
       Validator.sequenceOfOpts(
-        restriction.items.map { schema =>
+        restriction.effectiveItems.map { schema =>
           val schemaValidator = schema.validator(parentId, path)
-          val prefixSize = restriction.prefixItems.map(_.size).getOrElse(0)
+          val prefixSize = restriction.effectivePrefixItems.map(_.size).getOrElse(0)
           ItemValidator(schemaValidator, prefixSize)
         },
         restriction.minItems.map { minItems =>
@@ -39,7 +56,7 @@ object ArrayRestriction {
         restriction.uniqueItems.filter(_ == true).map { unique =>
           SimpleValidator.Unique
         },
-        restriction.prefixItems.map { prefixItems =>
+        restriction.effectivePrefixItems.map { prefixItems =>
           val subPath = path.enterObject("prefixItems")
           val prefixValidators = prefixItems.zipWithIndex.map { case (schema, idx) =>
             schema.validator(parentId, subPath.enterArray(idx))
