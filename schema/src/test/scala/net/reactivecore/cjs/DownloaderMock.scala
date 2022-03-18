@@ -13,6 +13,7 @@ class DownloaderMock extends Downloader[SimpleResolveResult] {
 
   val directories = Seq(
     "https://json-schema.org/draft/2020-12" -> "3rdparty/schema/2020-12",
+    "https://json-schema.org/draft/2019-09" -> "3rdparty/schema/2019-09",
     "http://localhost:1234" -> "3rdparty/JSON-Schema-Test-Suite/remotes"
   )
 
@@ -43,7 +44,7 @@ object DownloaderMock {
     * Figures out the base directory of the repository.
     * (IntelliJ and SBT are using different base directories)
     */
-  lazy val baseDir = {
+  lazy val baseDir: File = {
     val candidates = Seq(
       new File("./"),
       new File("../")

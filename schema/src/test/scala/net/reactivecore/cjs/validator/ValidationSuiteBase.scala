@@ -1,10 +1,9 @@
 package net.reactivecore.cjs.validator
 
-import io.circe.syntax._
 import net.reactivecore.cjs.{DownloaderMock, Schema, TestBase}
-import cats.implicits._
+import io.circe.syntax._
 
-class ValidationSuiteSpec extends TestBase {
+abstract class ValidationSuiteBase(name: String) extends TestBase {
 
   behavior of ("Parsing")
 
@@ -16,7 +15,7 @@ class ValidationSuiteSpec extends TestBase {
     "vocabulary.json"
   )
 
-  val tests = ValidationSuite.suite2020_12.filterNot { case (name, _) =>
+  val tests = ValidationSuite.load(name).filterNot { case (name, _) =>
     unsupported.contains(name)
   }
 
