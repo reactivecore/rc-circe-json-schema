@@ -1,12 +1,12 @@
 package net.reactivecore.cjs.validator
 
-import net.reactivecore.cjs.SchemaContext
+import net.reactivecore.cjs.SchemaOrigin
 import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 import shapeless._
 
 /** Typeclass which provides Validators for Restrictions */
 trait ValidationProvider[T] {
-  def apply(context: SchemaContext, restriction: T): Validator
+  def apply(origin: SchemaOrigin, restriction: T): Validator
 }
 
 object ValidationProvider {
@@ -15,8 +15,8 @@ object ValidationProvider {
     instance(restriction)
   }
 
-  def withContext[T](instance: (SchemaContext, T) => Validator): ValidationProvider[T] = { (context, restriction: T) =>
-    instance(context, restriction)
+  def withOrigin[T](instance: (SchemaOrigin, T) => Validator): ValidationProvider[T] = { (origin, restriction: T) =>
+    instance(origin, restriction)
   }
 
   def empty[T]: ValidationProvider[T] = ValidationProvider.instance(_ => Validator.success)

@@ -5,7 +5,7 @@ import io.circe.generic.semiauto
 import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 import net.reactivecore.cjs.util.Codecs
 import net.reactivecore.cjs.validator._
-import net.reactivecore.cjs.{Schema, SchemaContext}
+import net.reactivecore.cjs.{Schema, SchemaOrigin}
 
 /** Further restrictions of a type. */
 case class LogicRestrictions(
@@ -21,7 +21,7 @@ case class LogicRestrictions(
 object LogicRestrictions {
   implicit lazy val codec: Codec.AsObject[LogicRestrictions] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  implicit lazy val validationProvider: ValidationProvider[LogicRestrictions] = ValidationProvider.withContext {
+  implicit lazy val validationProvider: ValidationProvider[LogicRestrictions] = ValidationProvider.withOrigin {
     (context, restrictions) =>
       allOf(
         logicChain(context.enterObject("oneOf"), restrictions.oneOf, x => OneOfValidator(x.toVector)),
@@ -46,20 +46,20 @@ object LogicRestrictions {
     }
   }
 
-  private def ifThenElse(context: SchemaContext, logicRestrictions: LogicRestrictions): Validator = {
+  private def ifThenElse(origin: SchemaOrigin, logicRestrictions: LogicRestrictions): Validator = {
     val got = for {
       i <- logicRestrictions.`if`
     } yield {
-      val ic = i.validator(context)
-      val t = logicRestrictions.`then`.map(_.validator(context))
-      val e = logicRestrictions.`else`.map(_.validator(context))
+      val ic = i.validator(origin)
+      val t = logicRestrictions.`then`.map(_.validator(origin))
+      val e = logicRestrictions.`else`.map(_.validator(origin))
       IfThenElseValidator(ic, t, e)
     }
     got.getOrElse(Validator.success)
   }
 
   private def logicChain(
-      context: SchemaContext,
+      origin: SchemaOrigin,
       input: Option[Vector[Schema]],
       combiner: Seq[Validator] => Validator
   ): Validator = {
@@ -67,7 +67,7 @@ object LogicRestrictions {
       case None => Validator.success
       case Some(schemas) =>
         val validators = schemas.zipWithIndex.map { case (schema, idx) =>
-          schema.validator(context.enterArray(idx))
+          schema.validator(origin.enterArray(idx))
         }
         combiner(validators)
     }

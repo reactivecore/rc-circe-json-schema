@@ -76,14 +76,14 @@ object Ref {
     }
   }
 
-  implicit val validationProvider: ValidationProvider[Ref] = ValidationProvider.withContext { (context, instance) =>
+  implicit val validationProvider: ValidationProvider[Ref] = ValidationProvider.withOrigin { (origin, instance) =>
     Validator.sequenceOfOpts(
       instance.ref.map { ref =>
-        val fullPath = context.parentId.resolve(ref)
+        val fullPath = origin.parentId.resolve(ref)
         RefValidator(ref, fullPath)
       },
       instance.effectiveDynamicRef.map { dynamicRef =>
-        val fullPath = context.parentId.resolve(dynamicRef)
+        val fullPath = origin.parentId.resolve(dynamicRef)
         DynamicRefValidator(dynamicRef, fullPath)
       }
     )

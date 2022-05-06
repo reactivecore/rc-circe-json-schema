@@ -20,8 +20,8 @@ import scala.language.higherKinds
 sealed trait Schema {
 
   /** Returns a validator for the schema. */
-  def validator(context: SchemaContext): Validator = {
-    Schema.validationProvider(context, this)
+  def validator(origin: SchemaOrigin): Validator = {
+    Schema.validationProvider(origin, this)
   }
 
   /**
@@ -31,9 +31,9 @@ sealed trait Schema {
     */
   def schemaValidator(id: RefUri): SchemaValidator = {
     this match {
-      case BooleanSchema(value) => BooleanSchemaValidator(SchemaContext(id, JsonPointer()), value)
+      case BooleanSchema(value) => BooleanSchemaValidator(SchemaOrigin(id, JsonPointer()), value)
       case os: ObjectSchema =>
-        ObjectSchema.validatorWithId(id, SchemaContext(id, JsonPointer()), os)
+        ObjectSchema.validatorWithId(id, SchemaOrigin(id, JsonPointer()), os)
     }
   }
 
@@ -73,7 +73,7 @@ case class BooleanSchema(value: Boolean) extends Schema {
 object BooleanSchema {
   implicit def codec: Codec[BooleanSchema] = SchemaCodec.booleanSchemaCodec
 
-  implicit val validationProvider: ValidationProvider[BooleanSchema] = ValidationProvider.withContext {
+  implicit val validationProvider: ValidationProvider[BooleanSchema] = ValidationProvider.withOrigin {
     (context, schema) =>
       BooleanSchemaValidator(context, schema.value)
   }
@@ -91,24 +91,24 @@ case class ObjectSchema(
 object ObjectSchema {
   implicit def codec: Codec.AsObject[ObjectSchema] = Codecs.combineCodecG
 
-  implicit val validationProvider: ValidationProvider[ObjectSchema] = ValidationProvider.withContext { (context, os) =>
+  implicit val validationProvider: ValidationProvider[ObjectSchema] = ValidationProvider.withOrigin { (origin, os) =>
     val id = os.location.id
       .map { id =>
-        context.parentId.resolve(id)
+        origin.parentId.resolve(id)
       }
-      .getOrElse(context.parentId)
+      .getOrElse(origin.parentId)
 
-    validatorWithId(id, context, os)
+    validatorWithId(id, origin, os)
   }
 
-  def validatorWithId(id: RefUri, context: SchemaContext, os: ObjectSchema): ObjectSchemaValidator = {
-    val subContext = context.copy(
+  def validatorWithId(id: RefUri, origin: SchemaOrigin, os: ObjectSchema): ObjectSchemaValidator = {
+    val entered = origin.copy(
       parentId = id
     )
-    val restrictionValidator = Restriction.validationProvider(subContext, os.restriction)
-    val refValidator = Ref.validationProvider(subContext, os.ref)
-    val locationValidator = Location.validationProvider(subContext, os.location)
-    val definitionsValidator = Definitions.validationProvider(subContext, os.definitions)
+    val restrictionValidator = Restriction.validationProvider(entered, os.restriction)
+    val refValidator = Ref.validationProvider(entered, os.ref)
+    val locationValidator = Location.validationProvider(entered, os.location)
+    val definitionsValidator = Definitions.validationProvider(entered, os.definitions)
     val underlying = Validator.sequence(locationValidator, refValidator, definitionsValidator, restrictionValidator)
 
     val dynamicAnchor = os.ref.dynamicAnchor.orElse {
@@ -121,7 +121,7 @@ object ObjectSchema {
     }
 
     ObjectSchemaValidator(
-      subContext,
+      entered,
       underlying,
       fragment = os.ref.anchor,
       dynamicFragment = dynamicAnchor,
@@ -133,9 +133,9 @@ object ObjectSchema {
 object Schema {
   implicit def codec: Codec[Schema] = SchemaCodec.schemaCodec
 
-  implicit val validationProvider: ValidationProvider[Schema] = ValidationProvider.withContext {
-    case (context, b: BooleanSchema) => BooleanSchema.validationProvider(context, b)
-    case (context, r: ObjectSchema)  => ObjectSchema.validationProvider(context, r)
+  implicit val validationProvider: ValidationProvider[Schema] = ValidationProvider.withOrigin {
+    case (origin, b: BooleanSchema) => BooleanSchema.validationProvider(origin, b)
+    case (origin, r: ObjectSchema)  => ObjectSchema.validationProvider(origin, r)
   }
 
   /** Convenience method for Parsing a Schema */

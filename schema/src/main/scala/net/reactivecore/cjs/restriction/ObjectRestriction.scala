@@ -25,11 +25,11 @@ case class ObjectRestriction(
 object ObjectRestriction {
   implicit lazy val codec: Codec.AsObject[ObjectRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  implicit val validationProvider: ValidationProvider[ObjectRestriction] = ValidationProvider.withContext {
-    (context, objectRestrictions) =>
+  implicit val validationProvider: ValidationProvider[ObjectRestriction] = ValidationProvider.withOrigin {
+    (origin, objectRestrictions) =>
       val regular = Validator.sequenceOfOpts(
         objectRestrictions.properties.map { properties =>
-          val propertiesPath = context.enterObject("properties")
+          val propertiesPath = origin.enterObject("properties")
           val propertySchemas = properties.map { case (key, schema) =>
             key -> schema.validator(propertiesPath.enterObject(key))
           }
@@ -45,11 +45,11 @@ object ObjectRestriction {
           SimpleValidator.MaxProperties(maxProperties)
         },
         objectRestrictions.propertyNames.map { schema =>
-          val validator = schema.validator(context)
+          val validator = schema.validator(origin)
           PropertyNamesValidator(validator)
         },
         objectRestrictions.additionalProperties.map { schema =>
-          val validator = schema.validator(context)
+          val validator = schema.validator(origin)
           val additionalCheck = isAdditionalProperty(objectRestrictions)
           AdditionalPropertiesValidator(additionalCheck, validator)
         },
@@ -57,17 +57,17 @@ object ObjectRestriction {
           DependentRequiredValidator(dependentRequired)
         },
         objectRestrictions.dependentSchemas.map { dependentSchemas =>
-          val withSchemas = dependentSchemas.mapValues(_.validator(context)).toMap
+          val withSchemas = dependentSchemas.mapValues(_.validator(origin)).toMap
           DependentSchemasValidator(withSchemas)
         },
         objectRestrictions.patternProperties.map { patternProperties =>
           val regexSchemas: Vector[(Pattern, Validator)] = patternProperties.toVector.map { case (pattern, schema) =>
-            Pattern.compile(pattern) -> schema.validator(context)
+            Pattern.compile(pattern) -> schema.validator(origin)
           }
           PatternPropertiesValidator(regexSchemas)
         },
         objectRestrictions.unevaluatedProperties.map { unevaluatedProperties =>
-          val validator = unevaluatedProperties.validator(context)
+          val validator = unevaluatedProperties.validator(origin)
           UnevaluatedItemsValidator(validator)
         }
       )

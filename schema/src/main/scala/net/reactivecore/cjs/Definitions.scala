@@ -56,7 +56,7 @@ object Definitions {
     }
   }
 
-  implicit lazy val validationProvider: ValidationProvider[Definitions] = ValidationProvider.withContext {
+  implicit lazy val validationProvider: ValidationProvider[Definitions] = ValidationProvider.withOrigin {
     (context, definitions) =>
       val subPath = context.enterObject(JsonKey)
       val allDefinitions = definitions.defs.getOrElse(VectorMap.empty)
