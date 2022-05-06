@@ -47,7 +47,9 @@ object ArrayRestriction {
     (origin, restriction) =>
       Validator.sequenceOfOpts(
         restriction.v2020Items.map { schema =>
-          itemsValidator("items", origin, schema, restriction.effectivePrefixSize)
+          origin.validatorFor("items") { subOrigin =>
+            ItemValidator(schema.validator(subOrigin), restriction.effectivePrefixSize)
+          }
         },
         restriction.v2019Items.map { items =>
           // V2019
@@ -58,7 +60,9 @@ object ArrayRestriction {
           if restriction.v2019Items.isDefined
         } yield {
           // V2019, additionalItems is only used if items is given
-          itemsValidator("additionalItems", origin, additionalItems, restriction.effectivePrefixSize)
+          origin.validatorFor("additionalItems") { subOrigin =>
+            ItemValidator(additionalItems.validator(subOrigin), restriction.effectivePrefixSize)
+          }
         },
         restriction.minItems.map { minItems =>
           SimpleValidator.MinItems(minItems)
@@ -91,15 +95,5 @@ object ArrayRestriction {
       schema.validator(subPath.enterArray(idx))
     }
     PrefixValdiator(prefixValidators)
-  }
-
-  private def itemsValidator(
-      name: String,
-      context: SchemaOrigin,
-      schema: Schema,
-      prefixSize: Int
-  ): Validator = {
-    val schemaValidator = schema.validator(context.enterObject(name))
-    ItemValidator(schemaValidator, prefixSize)
   }
 }
