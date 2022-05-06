@@ -7,10 +7,6 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
 
   behavior of ("Parsing")
 
-  val unknownKeywords = Seq(
-    "unknownKeyword.json" // Unknown properties are not serialized again
-  )
-
   val unsupported = Seq(
     "vocabulary.json"
   )
@@ -28,9 +24,6 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
           case Right(ok) => ok
         }
         schema.asJson.as[Schema] shouldBe Right(schema)
-        if (!(unknownKeywords.exists(b => name.contains(b)))) {
-          ensureJsonEqual(schema.asJson, schemaTest.schema)
-        }
       }
     }
 
@@ -39,7 +32,6 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
         val schema = schemaTest.schema.as[Schema].forceRight
         withClue(s"in schema ${schemaTest.description}") {
           schema.resolve(new DownloaderMock).forceRight
-          // resolved.asJson.as[Schema] shouldBe Right(resolved)
         }
       }
     }
