@@ -2,11 +2,10 @@ package net.reactivecore.cjs.restriction
 
 import io.circe.Codec
 import io.circe.generic.semiauto
+import net.reactivecore.cjs.Schema
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
 import net.reactivecore.cjs.validator.array._
-import net.reactivecore.cjs.{Schema, SchemaOrigin}
-import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
+import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
 
 case class ArrayRestriction(
     items: Option[Either[Schema, Vector[Schema]]] = None, // Left: V2020_12, Right: V2019_09
@@ -47,21 +46,23 @@ object ArrayRestriction {
     (origin, restriction) =>
       Validator.sequenceOfOpts(
         restriction.v2020Items.map { schema =>
-          origin.validatorFor("items") { subOrigin =>
-            ItemValidator(schema.validator(subOrigin), restriction.effectivePrefixSize)
-          }
+          origin.validatorFor("items")(
+            ItemValidator(_, schema, restriction.effectivePrefixSize)
+          )
         },
         restriction.v2019Items.map { items =>
           // V2019
-          prefixValidator("items", origin, items)
+          origin.validatorFor("items")(
+            PrefixValidator(_, items)
+          )
         },
         for {
           additionalItems <- restriction.additionalItems
           if restriction.v2019Items.isDefined
         } yield {
           // V2019, additionalItems is only used if items is given
-          origin.validatorFor("additionalItems") { subOrigin =>
-            ItemValidator(additionalItems.validator(subOrigin), restriction.effectivePrefixSize)
+          origin.validatorFor("additionalItems") {
+            ItemValidator(_, additionalItems, restriction.effectivePrefixSize)
           }
         },
         restriction.minItems.map { minItems =>
@@ -74,7 +75,9 @@ object ArrayRestriction {
           SimpleValidator.Unique
         },
         restriction.prefixItems.map { prefixItems =>
-          prefixValidator("prefixItems", origin, prefixItems)
+          origin.validatorFor("prefixItems") {
+            PrefixValidator(_, prefixItems)
+          }
         },
         restriction.contains.map { contains =>
           val containSchema = contains.validator(origin)
@@ -87,13 +90,5 @@ object ArrayRestriction {
           UnevaluatedItemsValidator(validator)
         }
       )
-  }
-
-  private def prefixValidator(name: String, origin: SchemaOrigin, prefix: Vector[Schema]): Validator = {
-    val subPath = origin.enterObject(name)
-    val prefixValidators = prefix.zipWithIndex.map { case (schema, idx) =>
-      schema.validator(subPath.enterArray(idx))
-    }
-    PrefixValdiator(prefixValidators)
   }
 }
