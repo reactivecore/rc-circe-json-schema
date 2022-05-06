@@ -1,6 +1,7 @@
 package net.reactivecore.cjs.validator
 
 import io.circe.Json
+import net.reactivecore.cjs.SchemaContext
 import net.reactivecore.cjs.resolver.JsonPointer
 
 import scala.collection.mutable
@@ -56,8 +57,10 @@ trait Validator {
 /** A Validator which is is the base of a single schema. */
 trait SchemaValidator extends Validator {
 
+  def context: SchemaContext
+
   /** The path inside the schema. */
-  def path: JsonPointer
+  final def path: JsonPointer = context.path
 
   /** An Explicit fragment of this Validator */
   def fragment: Option[String] = None

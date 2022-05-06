@@ -20,8 +20,8 @@ import scala.language.higherKinds
 sealed trait Schema {
 
   /** Returns a validator for the schema. */
-  def validator(parentId: RefUri, path: JsonPointer): Validator = {
-    Schema.validationProvider(parentId, path, this)
+  def validator(context: SchemaContext): Validator = {
+    Schema.validationProvider(context, this)
   }
 
   /**
@@ -31,9 +31,9 @@ sealed trait Schema {
     */
   def schemaValidator(id: RefUri): SchemaValidator = {
     this match {
-      case BooleanSchema(value) => BooleanSchemaValidator(JsonPointer(), value)
+      case BooleanSchema(value) => BooleanSchemaValidator(SchemaContext(id, JsonPointer()), value)
       case os: ObjectSchema =>
-        ObjectSchema.validatorWithId(id, JsonPointer(), os)
+        ObjectSchema.validatorWithId(id, SchemaContext(id, JsonPointer()), os)
     }
   }
 
@@ -73,8 +73,9 @@ case class BooleanSchema(value: Boolean) extends Schema {
 object BooleanSchema {
   implicit def codec: Codec[BooleanSchema] = SchemaCodec.booleanSchemaCodec
 
-  implicit val validationProvider: ValidationProvider[BooleanSchema] = ValidationProvider.withUri { (_, path, schema) =>
-    BooleanSchemaValidator(path, schema.value)
+  implicit val validationProvider: ValidationProvider[BooleanSchema] = ValidationProvider.withContext {
+    (context, schema) =>
+      BooleanSchemaValidator(context, schema.value)
   }
 }
 
@@ -90,23 +91,24 @@ case class ObjectSchema(
 object ObjectSchema {
   implicit def codec: Codec.AsObject[ObjectSchema] = Codecs.combineCodecG
 
-  implicit val validationProvider: ValidationProvider[ObjectSchema] = new ValidationProvider[ObjectSchema] {
-    override def apply(parentId: RefUri, path: JsonPointer, os: ObjectSchema): Validator = {
-      val id = os.location.id
-        .map { id =>
-          parentId.resolve(id)
-        }
-        .getOrElse(parentId)
+  implicit val validationProvider: ValidationProvider[ObjectSchema] = ValidationProvider.withContext { (context, os) =>
+    val id = os.location.id
+      .map { id =>
+        context.parentId.resolve(id)
+      }
+      .getOrElse(context.parentId)
 
-      validatorWithId(id, path, os)
-    }
+    validatorWithId(id, context, os)
   }
 
-  def validatorWithId(id: RefUri, path: JsonPointer, os: ObjectSchema): ObjectSchemaValidator = {
-    val restrictionValidator = Restriction.validationProvider(id, path, os.restriction)
-    val refValidator = Ref.validationProvider(id, path, os.ref)
-    val locationValidator = Location.validationProvider(id, path, os.location)
-    val definitionsValidator = Definitions.validationProvider(id, path, os.definitions)
+  def validatorWithId(id: RefUri, context: SchemaContext, os: ObjectSchema): ObjectSchemaValidator = {
+    val subContext = context.copy(
+      parentId = id
+    )
+    val restrictionValidator = Restriction.validationProvider(subContext, os.restriction)
+    val refValidator = Ref.validationProvider(subContext, os.ref)
+    val locationValidator = Location.validationProvider(subContext, os.location)
+    val definitionsValidator = Definitions.validationProvider(subContext, os.definitions)
     val underlying = Validator.sequence(locationValidator, refValidator, definitionsValidator, restrictionValidator)
 
     val dynamicAnchor = os.ref.dynamicAnchor.orElse {
@@ -119,7 +121,7 @@ object ObjectSchema {
     }
 
     ObjectSchemaValidator(
-      path,
+      subContext,
       underlying,
       fragment = os.ref.anchor,
       dynamicFragment = dynamicAnchor,
@@ -131,9 +133,9 @@ object ObjectSchema {
 object Schema {
   implicit def codec: Codec[Schema] = SchemaCodec.schemaCodec
 
-  implicit val validationProvider: ValidationProvider[Schema] = ValidationProvider.withUri {
-    case (uri, path, b: BooleanSchema) => BooleanSchema.validationProvider(uri, path, b)
-    case (uri, path, r: ObjectSchema)  => ObjectSchema.validationProvider(uri, path, r)
+  implicit val validationProvider: ValidationProvider[Schema] = ValidationProvider.withContext {
+    case (context, b: BooleanSchema) => BooleanSchema.validationProvider(context, b)
+    case (context, r: ObjectSchema)  => ObjectSchema.validationProvider(context, r)
   }
 
   /** Convenience method for Parsing a Schema */

@@ -5,7 +5,7 @@ import io.circe.generic.semiauto
 import net.reactivecore.cjs.util.Codecs
 import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
 import net.reactivecore.cjs.validator.array._
-import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.{Schema, SchemaContext}
 import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 
 case class ArrayRestriction(
@@ -43,22 +43,22 @@ object ArrayRestriction {
 
   implicit lazy val codec: Codec.AsObject[ArrayRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  implicit val validationProvider: ValidationProvider[ArrayRestriction] = ValidationProvider.withUri {
-    (parentId, path, restriction) =>
+  implicit val validationProvider: ValidationProvider[ArrayRestriction] = ValidationProvider.withContext {
+    (context, restriction) =>
       Validator.sequenceOfOpts(
         restriction.v2020Items.map { schema =>
-          itemsValidator(parentId, "items", path, schema, restriction.effectivePrefixSize)
+          itemsValidator("items", context, schema, restriction.effectivePrefixSize)
         },
         restriction.v2019Items.map { items =>
           // V2019
-          prefixValidator(parentId, "items", path, items)
+          prefixValidator("items", context, items)
         },
         for {
           additionalItems <- restriction.additionalItems
           if restriction.v2019Items.isDefined
         } yield {
           // V2019, additionalItems is only used if items is given
-          itemsValidator(parentId, "additionalItems", path, additionalItems, restriction.effectivePrefixSize)
+          itemsValidator("additionalItems", context, additionalItems, restriction.effectivePrefixSize)
         },
         restriction.minItems.map { minItems =>
           SimpleValidator.MinItems(minItems)
@@ -70,37 +70,36 @@ object ArrayRestriction {
           SimpleValidator.Unique
         },
         restriction.prefixItems.map { prefixItems =>
-          prefixValidator(parentId, "prefixItems", path, prefixItems)
+          prefixValidator("prefixItems", context, prefixItems)
         },
         restriction.contains.map { contains =>
-          val containSchema = contains.validator(parentId, path)
+          val containSchema = contains.validator(context)
           val minContains = restriction.minContains.getOrElse(1)
           val maxContains = restriction.maxContains
           ContainsValidator(containSchema, minContains, maxContains)
         },
         restriction.unevaluatedItems.map { schema =>
-          val validator = schema.validator(parentId, path)
+          val validator = schema.validator(context)
           UnevaluatedItemsValidator(validator)
         }
       )
   }
 
-  private def prefixValidator(parentId: RefUri, name: String, path: JsonPointer, prefix: Vector[Schema]): Validator = {
-    val subPath = path.enterObject(name)
+  private def prefixValidator(name: String, context: SchemaContext, prefix: Vector[Schema]): Validator = {
+    val subPath = context.enterObject(name)
     val prefixValidators = prefix.zipWithIndex.map { case (schema, idx) =>
-      schema.validator(parentId, subPath.enterArray(idx))
+      schema.validator(subPath.enterArray(idx))
     }
     PrefixValdiator(prefixValidators)
   }
 
   private def itemsValidator(
-      parentId: RefUri,
       name: String,
-      path: JsonPointer,
+      context: SchemaContext,
       schema: Schema,
       prefixSize: Int
   ): Validator = {
-    val schemaValidator = schema.validator(parentId, path.enterObject(name))
+    val schemaValidator = schema.validator(context.enterObject(name))
     ItemValidator(schemaValidator, prefixSize)
   }
 }

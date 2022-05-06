@@ -76,17 +76,16 @@ object Ref {
     }
   }
 
-  implicit val validationProvider: ValidationProvider[Ref] = ValidationProvider.withUri {
-    (parentId, path: JsonPointer, instance) =>
-      Validator.sequenceOfOpts(
-        instance.ref.map { ref =>
-          val fullPath = parentId.resolve(ref)
-          RefValidator(ref, fullPath)
-        },
-        instance.effectiveDynamicRef.map { dynamicRef =>
-          val fullPath = parentId.resolve(dynamicRef)
-          DynamicRefValidator(dynamicRef, fullPath)
-        }
-      )
+  implicit val validationProvider: ValidationProvider[Ref] = ValidationProvider.withContext { (context, instance) =>
+    Validator.sequenceOfOpts(
+      instance.ref.map { ref =>
+        val fullPath = context.parentId.resolve(ref)
+        RefValidator(ref, fullPath)
+      },
+      instance.effectiveDynamicRef.map { dynamicRef =>
+        val fullPath = context.parentId.resolve(dynamicRef)
+        DynamicRefValidator(dynamicRef, fullPath)
+      }
+    )
   }
 }

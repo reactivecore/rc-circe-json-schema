@@ -1,10 +1,11 @@
 package net.reactivecore.cjs.validator
 
 import io.circe.Json
+import net.reactivecore.cjs.SchemaContext
 import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 
 case class ObjectSchemaValidator(
-    path: JsonPointer,
+    context: SchemaContext,
     underlying: Validator,
     override val fragment: Option[String],
     override val dynamicFragment: Option[String],

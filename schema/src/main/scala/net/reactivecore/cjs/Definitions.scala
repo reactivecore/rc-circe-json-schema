@@ -56,9 +56,9 @@ object Definitions {
     }
   }
 
-  implicit lazy val validationProvider: ValidationProvider[Definitions] = ValidationProvider.withUri {
-    (parentId, path, definitions) =>
-      val subPath = path.enterObject(JsonKey)
+  implicit lazy val validationProvider: ValidationProvider[Definitions] = ValidationProvider.withContext {
+    (context, definitions) =>
+      val subPath = context.enterObject(JsonKey)
       val allDefinitions = definitions.defs.getOrElse(VectorMap.empty)
       if (allDefinitions.isEmpty) {
         Validator.success
@@ -66,7 +66,7 @@ object Definitions {
 
         val myChildren = allDefinitions.map { case (key, schema) =>
           val childPath = subPath.enterObject(key)
-          val subValidator = schema.validator(parentId, childPath)
+          val subValidator = schema.validator(childPath)
           subValidator
         }.toVector
         DefinitionsValidator(myChildren)
