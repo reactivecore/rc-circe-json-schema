@@ -5,25 +5,30 @@ import net.reactivecore.cjs.validator.Validator
 import net.reactivecore.cjs.validator.provider.ValidationProvider
 import shapeless._
 
-/** Holds a single named restriction */
-case class SingleRestriction[T, VF](value: T) extends AnyVal
+/**
+  * A Single field inside a Restriction
+  *
+  * @tparam T type of data field
+  * @tparam V tagging type which is used to figure out Validator (usually the Validator itself)
+  */
+case class ValidatingField[T, V](value: T) extends AnyVal
 
-object SingleRestriction {
+object ValidatingField {
 
   /** Provides a validation provider for Validators with trivial constructor */
-  implicit def singleValidationProvider[T, V <: Validator](
+  implicit def trivialValidationProvider[T, V <: Validator](
       implicit generic: Generic.Aux[V, T :: HNil]
-  ): ValidationProvider[SingleRestriction[T, V]] = { (origin, value) =>
+  ): ValidationProvider[ValidatingField[T, V]] = { (origin, value) =>
     generic.from(value.value :: HNil)
   }
 
   /** JSON Codec Support. */
-  implicit def singleRestrictionCodec[T, V <: Validator](
+  implicit def codec[T, V <: Validator](
       implicit e: Encoder[T],
       d: Decoder[T]
-  ): Codec[SingleRestriction[T, V]] =
+  ): Codec[ValidatingField[T, V]] =
     Codec.from(
-      d.map(SingleRestriction(_)),
+      d.map(ValidatingField(_)),
       e.contramap(_.value)
     )
 }
