@@ -20,22 +20,33 @@ object SingleRestriction {
     }
   }
 
-  trait SingleRestrictionProvider[-C, T, V <: Validator] {
-    def apply(context: C, origin: SchemaOrigin, value: T): V
+  trait SingleRestrictionProvider[-C, T, V] {
+    def apply(context: C, origin: SchemaOrigin, value: T): Validator
   }
 
   // Manuelle Version um Provider zu bauen
-  def makeTrivialProvider[T, V <: Validator](f: T => V): SingleRestrictionProvider[Any, T, V] =
+  def makeTrivialProvider[T, V](f: T => Validator): SingleRestrictionProvider[Any, T, V] =
     new SingleRestrictionProvider[Any, T, V] {
-      override def apply(context: Any, origin: SchemaOrigin, value: T): V = f(value)
+      override def apply(context: Any, origin: SchemaOrigin, value: T): Validator = f(value)
     }
 
   // Implicite Variante um Provider zu bauen
   implicit def provideTrivial[T, V <: Validator](
       implicit generic: Generic.Aux[V, T :: HNil]
   ): SingleRestrictionProvider[Any, T, V] = new SingleRestrictionProvider[Any, T, V] {
-    override def apply(context: Any, origin: SchemaOrigin, value: T): V = {
+    override def apply(context: Any, origin: SchemaOrigin, value: T): Validator = {
       generic.from(value :: HNil)
+    }
+  }
+
+  implicit def provideOption[C, T, V <: Validator](
+      implicit underlying: SingleRestrictionProvider[C, T, V]
+  ): SingleRestrictionProvider[C, Option[T], V] = new SingleRestrictionProvider[C, Option[T], V] {
+    override def apply(context: C, origin: SchemaOrigin, value: Option[T]): Validator = {
+      value match {
+        case Some(value) => underlying.apply(context, origin, value)
+        case None        => Validator.success
+      }
     }
   }
 
@@ -50,6 +61,7 @@ object SingleRestriction {
 
   // Ok, das geht schonmal
   singleRestrictionCodec[BigDecimal, MinimumValidator]
+
   // Das geht auch
   implicitly[Codec[SingleRestriction[BigDecimal, MinimumValidator]]]
 
@@ -61,47 +73,83 @@ object SingleRestriction {
 
   implicitly[SingleRestrictionProvider[Example, BigDecimal, MinimumValidator]]
 
+  // Das geht auch
+  implicitly[SingleRestrictionProvider[Example, Option[BigDecimal], MinimumValidator]]
+
   val codec = io.circe.generic.semiauto.deriveCodec[Example]
 
   // Jetzt fehlt mir nur noch ein ValidationProvider
 
-  trait Helper[T, C] {
-    def apply(context: C): ValidationProvider[T]
+  trait SequenceValidationProviderBuilder[C] {
+    def apply: ValidationProvider[C]
   }
 
-  implicit def hnilHelper[C]: Helper[HNil, C] = new Helper[HNil, C] {
-    override def apply(context: C): ValidationProvider[HNil] = ValidationProvider.empty
-  }
+  object SequenceValidationProviderBuilder {
 
-  implicit def hlistHelper[H, T <: HList, V <: Validator, C](
-      implicit p: SingleRestrictionProvider[C, H, V],
-      tailHelper: Helper[T, C],
-      w: Witness.Aux[H]
-  ) =
-    new Helper[H :: T, C] {
-      override def apply(context: C): ValidationProvider[H :: T] = {
-        val fieldName = "TODO"
-        ValidationProvider.withOrigin { (origin, value) =>
-          Validator.sequence(
-            p.apply(context, origin.enterObject(fieldName), value.head),
-            tailHelper.apply(context)(origin, value.tail)
-          )
+    /** Recursive Helper for Building. */
+    trait Helper[T, C] {
+      def apply(context: C): ValidationProvider[T]
+    }
+
+    implicit def hnilHelper[C]: Helper[HNil, C] = new Helper[HNil, C] {
+      override def apply(context: C): ValidationProvider[HNil] = ValidationProvider.empty
+    }
+
+    implicit def hlistHelper[H, T <: HList, V <: Validator, C](
+        implicit p: SingleRestrictionProvider[C, H, V],
+        tailHelper: Helper[T, C] // ,
+        // w: Witness.Aux[H]
+    ): Helper[SingleRestriction[H, V] :: T, C] =
+      new Helper[SingleRestriction[H, V] :: T, C] {
+
+        override def apply(context: C): ValidationProvider[SingleRestriction[H, V] :: T] = {
+          val fieldName = "TODO"
+          ValidationProvider.withOrigin { (origin, value) =>
+            Validator.sequence(
+              p.apply(context, origin.enterObject(fieldName), value.head.value),
+              tailHelper.apply(context)(origin, value.tail)
+            )
+          }
+        }
+      }
+
+    implicit def generate[C, G](
+        implicit labelledGeneric: Generic.Aux[C, G],
+        helper: Helper[G, C]
+    ): SequenceValidationProviderBuilder[C] = {
+      new SequenceValidationProviderBuilder[C] {
+        override def apply: ValidationProvider[C] = {
+          new ValidationProvider[C] {
+            override def apply(origin: SchemaOrigin, restriction: C): Validator = {
+              helper.apply(restriction).apply(origin, labelledGeneric.to(restriction))
+            }
+          }
         }
       }
     }
-
-  def makeValidationProvider[T, G](
-      implicit labelledGeneric: LabelledGeneric.Aux[T, G],
-      helper: Helper[G, T]
-  ): ValidationProvider[T] = {
-    new ValidationProvider[T] {
-      override def apply(origin: SchemaOrigin, restriction: T): Validator = {
-        helper.apply(restriction).apply(origin, labelledGeneric.to(restriction))
-      }
-    }
   }
 
-  // TODO: Continue here!
+  def makeSequenceValidationProvider[C](
+      implicit builder: SequenceValidationProviderBuilder[C]
+  ): ValidationProvider[C] = {
+    builder.apply
+  }
 
-  // makeValidationProvider[Example] // Doesn't compile yet
+  implicitly[LabelledGeneric[Example]]
+
+  SequenceValidationProviderBuilder.hnilHelper[Example]
+
+  SequenceValidationProviderBuilder.hlistHelper[
+    Option[SingleRestriction[BigDecimal, MinimumValidator]],
+    HNil,
+    MinimumValidator,
+    Example
+  ]
+
+  implicitly[
+    SequenceValidationProviderBuilder.Helper[Option[SingleRestriction[BigDecimal, MinimumValidator]] :: HNil, Example]
+  ]
+  // SequenceValidationProviderBuilder.generate[Example, Option[SingleRestriction[BigDecimal, MinimumValidator]] :: HNil]
+
+  makeSequenceValidationProvider[Example] // Doesn't compile yet
 }
