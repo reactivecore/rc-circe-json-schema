@@ -90,15 +90,15 @@ object SingleRestriction {
 
     implicit def hnilHelper[C]: Helper[HNil, C] = (_: C) => ValidationProvider.empty
 
-    implicit def hlistHelper[H, T <: HList, V <: Validator, C](
+    implicit def hlistHelper[K <: Symbol, H, T <: HList, V <: Validator, C](
         implicit p: ContextValidationProvider[H, C],
-        tailHelper: Helper[T, C] // ,
-        // w: Witness.Aux[H]
-    ): Helper[H :: T, C] =
-      new Helper[H :: T, C] {
+        tailHelper: Helper[T, C],
+        w: Witness.Aux[K]
+    ): Helper[FieldType[K, H] :: T, C] =
+      new Helper[FieldType[K, H] :: T, C] {
+        val fieldName = w.value.name
 
-        override def apply(context: C): ValidationProvider[H :: T] = {
-          val fieldName = "TODO"
+        override def apply(context: C): ValidationProvider[FieldType[K, H] :: T] = {
           ValidationProvider.withOrigin { (origin, value) =>
             Validator.sequence(
               p.apply(context)(origin.enterObject(fieldName), value.head),
@@ -109,7 +109,7 @@ object SingleRestriction {
       }
 
     implicit def generate[C, G](
-        implicit labelledGeneric: Generic.Aux[C, G],
+        implicit labelledGeneric: LabelledGeneric.Aux[C, G],
         helper: Helper[G, C]
     ): SequenceValidationProviderBuilder[C] = {
       new SequenceValidationProviderBuilder[C] {
@@ -142,9 +142,11 @@ object SingleRestriction {
   ]
    */
 
+  /*
   implicitly[
     SequenceValidationProviderBuilder.Helper[Option[SingleRestriction[BigDecimal, MinimumValidator]] :: HNil, Example]
   ]
+   */
 
   makeSequenceValidationProvider[Example]
 }
