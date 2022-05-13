@@ -3,7 +3,7 @@ package net.reactivecore.cjs.restriction
 import io.circe.Codec
 import net.reactivecore.cjs.Definitions
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.ValidationProvider
+import net.reactivecore.cjs.validator.provider.ValidationProvider
 
 /**
   * Contains all Restrictions.

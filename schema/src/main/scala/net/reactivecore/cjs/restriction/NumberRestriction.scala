@@ -3,7 +3,8 @@ package net.reactivecore.cjs.restriction
 import io.circe.generic.semiauto
 import io.circe.{Codec, Json}
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{ValidationProvider, ValidationResult, Validator, Violation}
+import net.reactivecore.cjs.validator.provider.ValidationProvider
+import net.reactivecore.cjs.validator.{ValidationResult, Validator, Violation}
 
 case class NumberRestriction(
     minimum: Option[BigDecimal] = None,

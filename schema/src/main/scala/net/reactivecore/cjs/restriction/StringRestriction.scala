@@ -4,7 +4,8 @@ import io.circe.Codec
 import io.circe.generic.semiauto
 import net.reactivecore.cjs.Schema
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
+import net.reactivecore.cjs.validator.Validator
+import net.reactivecore.cjs.validator.provider.ValidationProvider
 
 import java.util.regex.Pattern
 

@@ -1,7 +1,7 @@
-package net.reactivecore.cjs.validator
+package net.reactivecore.cjs.validator.provider
 
 import net.reactivecore.cjs.SchemaOrigin
-import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
+import net.reactivecore.cjs.validator.Validator
 import shapeless._
 
 /** Typeclass which provides Validators for Restrictions */

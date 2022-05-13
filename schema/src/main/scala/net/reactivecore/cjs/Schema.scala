@@ -6,13 +6,8 @@ import io.circe.Codec
 import net.reactivecore.cjs.resolver._
 import net.reactivecore.cjs.restriction.Restriction
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{
-  BooleanSchemaValidator,
-  ObjectSchemaValidator,
-  SchemaValidator,
-  ValidationProvider,
-  Validator
-}
+import net.reactivecore.cjs.validator.provider.ValidationProvider
+import net.reactivecore.cjs.validator.{BooleanSchemaValidator, ObjectSchemaValidator, SchemaValidator, Validator}
 
 import scala.language.higherKinds
 
