@@ -20,36 +20,37 @@ object SingleRestriction {
     }
   }
 
-  trait SingleRestrictionProvider[-C, T, V] {
-    def apply(context: C, origin: SchemaOrigin, value: T): Validator
+  /** Context specific validation provider (context may be the outlying class) */
+  trait ContextValidationProvider[T, -C] {
+    def apply(context: C): ValidationProvider[T]
   }
 
-  // Manuelle Version um Provider zu bauen
-  def makeTrivialProvider[T, V](f: T => Validator): SingleRestrictionProvider[Any, T, V] =
-    new SingleRestrictionProvider[Any, T, V] {
-      override def apply(context: Any, origin: SchemaOrigin, value: T): Validator = f(value)
-    }
-
-  // Implicite Variante um Provider zu bauen
-  implicit def provideTrivial[T, V <: Validator](
+  /** Provides a validation provider for Validators with trivial constructor */
+  implicit def singleValidationProvider[T, V <: Validator](
       implicit generic: Generic.Aux[V, T :: HNil]
-  ): SingleRestrictionProvider[Any, T, V] = new SingleRestrictionProvider[Any, T, V] {
-    override def apply(context: Any, origin: SchemaOrigin, value: T): Validator = {
-      generic.from(value :: HNil)
-    }
+  ): ValidationProvider[SingleRestriction[T, V]] = { (origin, value) =>
+    generic.from(value.value :: HNil)
   }
 
-  implicit def provideOption[C, T, V <: Validator](
-      implicit underlying: SingleRestrictionProvider[C, T, V]
-  ): SingleRestrictionProvider[C, Option[T], V] = new SingleRestrictionProvider[C, Option[T], V] {
-    override def apply(context: C, origin: SchemaOrigin, value: Option[T]): Validator = {
-      value match {
-        case Some(value) => underlying.apply(context, origin, value)
-        case None        => Validator.success
+  implicit def fromContextProvider[T](implicit p: ValidationProvider[T]): ContextValidationProvider[T, Any] =
+    (_: Any) => p
+
+  /** Support for optionals */
+  implicit def optionalSupport[T, C](
+      implicit underlying: ContextValidationProvider[T, C]
+  ): ContextValidationProvider[Option[T], C] = {
+    (context: C) =>
+      { (origin: SchemaOrigin, restriction: Option[T]) =>
+        {
+          restriction match {
+            case Some(value) => underlying(context)(origin, value)
+            case None        => Validator.success
+          }
+        }
       }
-    }
   }
 
+  /** JSON Codec Support. */
   implicit def singleRestrictionCodec[T, V <: Validator](
       implicit e: Encoder[T],
       d: Decoder[T]
@@ -71,11 +72,6 @@ object SingleRestriction {
       minimum: Option[SingleRestriction[BigDecimal, MinimumValidator]]
   )
 
-  implicitly[SingleRestrictionProvider[Example, BigDecimal, MinimumValidator]]
-
-  // Das geht auch
-  implicitly[SingleRestrictionProvider[Example, Option[BigDecimal], MinimumValidator]]
-
   val codec = io.circe.generic.semiauto.deriveCodec[Example]
 
   // Jetzt fehlt mir nur noch ein ValidationProvider
@@ -96,17 +92,17 @@ object SingleRestriction {
     }
 
     implicit def hlistHelper[H, T <: HList, V <: Validator, C](
-        implicit p: SingleRestrictionProvider[C, H, V],
+        implicit p: ContextValidationProvider[H, C],
         tailHelper: Helper[T, C] // ,
         // w: Witness.Aux[H]
-    ): Helper[SingleRestriction[H, V] :: T, C] =
-      new Helper[SingleRestriction[H, V] :: T, C] {
+    ): Helper[H :: T, C] =
+      new Helper[H :: T, C] {
 
-        override def apply(context: C): ValidationProvider[SingleRestriction[H, V] :: T] = {
+        override def apply(context: C): ValidationProvider[H :: T] = {
           val fieldName = "TODO"
           ValidationProvider.withOrigin { (origin, value) =>
             Validator.sequence(
-              p.apply(context, origin.enterObject(fieldName), value.head.value),
+              p.apply(context)(origin.enterObject(fieldName), value.head),
               tailHelper.apply(context)(origin, value.tail)
             )
           }
