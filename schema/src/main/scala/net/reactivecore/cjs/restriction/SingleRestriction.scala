@@ -4,6 +4,7 @@ import io.circe.{Codec, Decoder, Encoder, Json}
 import net.reactivecore.cjs.SchemaOrigin
 import net.reactivecore.cjs.validator.{SimpleContextFreeValidator, ValidationProvider, Validator}
 import shapeless._
+import shapeless.labelled.FieldType
 
 /** Holds a single named restriction */
 case class SingleRestriction[T, VF](value: T) extends AnyVal
@@ -87,9 +88,7 @@ object SingleRestriction {
       def apply(context: C): ValidationProvider[T]
     }
 
-    implicit def hnilHelper[C]: Helper[HNil, C] = new Helper[HNil, C] {
-      override def apply(context: C): ValidationProvider[HNil] = ValidationProvider.empty
-    }
+    implicit def hnilHelper[C]: Helper[HNil, C] = (_: C) => ValidationProvider.empty
 
     implicit def hlistHelper[H, T <: HList, V <: Validator, C](
         implicit p: ContextValidationProvider[H, C],
@@ -135,17 +134,17 @@ object SingleRestriction {
 
   SequenceValidationProviderBuilder.hnilHelper[Example]
 
+  /*
   SequenceValidationProviderBuilder.hlistHelper[
     Option[SingleRestriction[BigDecimal, MinimumValidator]],
     HNil,
-    MinimumValidator,
     Example
   ]
+   */
 
   implicitly[
     SequenceValidationProviderBuilder.Helper[Option[SingleRestriction[BigDecimal, MinimumValidator]] :: HNil, Example]
   ]
-  // SequenceValidationProviderBuilder.generate[Example, Option[SingleRestriction[BigDecimal, MinimumValidator]] :: HNil]
 
-  makeSequenceValidationProvider[Example] // Doesn't compile yet
+  makeSequenceValidationProvider[Example]
 }
