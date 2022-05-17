@@ -30,7 +30,7 @@ object SequenceValidationProvider {
     implicit def hnilHelper[C]: Helper[HNil, C] = (_: C) => ValidationProvider.empty
 
     implicit def hlistHelper[K <: Symbol, H, T <: HList, V <: Validator, C](
-        implicit p: ContextValidationProvider[H, C],
+        implicit p: ValidationProvider[H],
         tailHelper: Helper[T, C],
         w: Witness.Aux[K]
     ): Helper[FieldType[K, H] :: T, C] =
@@ -40,7 +40,25 @@ object SequenceValidationProvider {
         override def apply(context: C): ValidationProvider[FieldType[K, H] :: T] = {
           ValidationProvider.withOrigin { (origin, value) =>
             Validator.sequence(
-              p.apply(context)(origin.enterObject(fieldName), value.head),
+              p(origin.enterObject(fieldName), value.head),
+              tailHelper.apply(context)(origin, value.tail)
+            )
+          }
+        }
+      }
+
+    implicit def hlistHelperWithContext[K <: Symbol, H, T <: HList, V <: Validator, C](
+        implicit p: ValidationProvider[(C, H)],
+        tailHelper: Helper[T, C],
+        w: Witness.Aux[K]
+    ): Helper[FieldType[K, H] :: T, C] =
+      new Helper[FieldType[K, H] :: T, C] {
+        val fieldName = w.value.name
+
+        override def apply(context: C): ValidationProvider[FieldType[K, H] :: T] = {
+          ValidationProvider.withOrigin { (origin, value) =>
+            Validator.sequence(
+              p(origin.enterObject(fieldName), context -> value.head),
               tailHelper.apply(context)(origin, value.tail)
             )
           }
