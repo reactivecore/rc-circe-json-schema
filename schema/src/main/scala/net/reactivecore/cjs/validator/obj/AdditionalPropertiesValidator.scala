@@ -1,6 +1,11 @@
 package net.reactivecore.cjs.validator.obj
 import io.circe.JsonObject
+import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.restriction.{ObjectRestriction, ValidatingField}
+import net.reactivecore.cjs.validator.provider.{ContextValidationProvider, ValidationProvider}
 import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+
+import java.util.regex.Pattern
 
 case class AdditionalPropertiesValidator(additionalCheck: String => Boolean, validator: Validator)
     extends ObjectValidator {
@@ -19,5 +24,33 @@ case class AdditionalPropertiesValidator(additionalCheck: String => Boolean, val
     )
 
     updatedState -> violations
+  }
+}
+
+object AdditionalPropertiesValidator {
+  implicit val provider
+      : ContextValidationProvider[ValidatingField[Schema, AdditionalPropertiesValidator], ObjectRestriction] = {
+    context =>
+      val regularProperties: Set[String] = context.properties.map(_.value.keySet).getOrElse(Set.empty)
+      val patternPropertyMatchers: Vector[Pattern] = context.patternProperties
+        .map(_.value)
+        .getOrElse(Vector.empty)
+        .map { case (pattern, _) =>
+          Pattern.compile(pattern)
+        }
+        .toVector
+
+      /** Returns true if the given property is not evaluated using properties or patternProperties */
+      def isAdditionalProperty(propertyName: String): Boolean = {
+        !regularProperties.contains(propertyName) && !patternPropertyMatchers.exists(p =>
+          p.matcher(propertyName).find()
+        )
+      }
+
+      ValidationProvider.forField { (origin, schema) =>
+        val validator = schema.validator(origin)
+        val additionalCheck = isAdditionalProperty(_)
+        AdditionalPropertiesValidator(additionalCheck, validator)
+      }
   }
 }

@@ -1,6 +1,7 @@
 package net.reactivecore.cjs.validator.obj
 import io.circe.{Json, JsonObject}
 import net.reactivecore.cjs.util.VectorMap
+import net.reactivecore.cjs.validator.provider.ValidationProvider
 import net.reactivecore.cjs.validator.{ValidationResult, Violation}
 
 case class DependentRequiredValidator(dependentRequired: VectorMap[String, Vector[String]]) extends StatelessValidator {

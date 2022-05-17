@@ -1,6 +1,7 @@
 package net.reactivecore.cjs.validator.provider
 
 import net.reactivecore.cjs.SchemaOrigin
+import net.reactivecore.cjs.restriction.ValidatingField
 import net.reactivecore.cjs.validator.Validator
 import shapeless._
 
@@ -17,6 +18,12 @@ object ValidationProvider {
 
   def withOrigin[T](instance: (SchemaOrigin, T) => Validator): ValidationProvider[T] = { (origin, restriction: T) =>
     instance(origin, restriction)
+  }
+
+  def forField[T, V](f: (SchemaOrigin, T) => Validator): ValidationProvider[ValidatingField[T, V]] = {
+    withOrigin[ValidatingField[T, V]] { (origin, field) =>
+      f(origin, field.value)
+    }
   }
 
   def empty[T]: ValidationProvider[T] = ValidationProvider.instance(_ => Validator.success)

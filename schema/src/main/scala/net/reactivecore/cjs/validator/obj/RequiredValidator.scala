@@ -1,5 +1,6 @@
 package net.reactivecore.cjs.validator.obj
 import io.circe.{Json, JsonObject}
+import net.reactivecore.cjs.validator.provider.ValidationProvider
 import net.reactivecore.cjs.validator.{ValidationResult, Violation}
 
 case class RequiredValidator(fields: Seq[String]) extends StatelessValidator {

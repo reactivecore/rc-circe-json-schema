@@ -1,6 +1,8 @@
 package net.reactivecore.cjs.validator.obj
 
 import io.circe.{Json, JsonObject}
+import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.validator.provider.ValidationProvider
 import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
 
 case class PropertyNamesValidator(validator: Validator) extends ObjectValidator {
@@ -14,5 +16,10 @@ case class PropertyNamesValidator(validator: Validator) extends ObjectValidator 
       })
       .getOrElse(ValidationResult.success)
   }
+}
 
+object PropertyNamesValidator {
+  implicit val provider = ValidationProvider.forField[Schema, PropertyNamesValidator] { (origin, schema) =>
+    PropertyNamesValidator(schema.validator(origin))
+  }
 }
