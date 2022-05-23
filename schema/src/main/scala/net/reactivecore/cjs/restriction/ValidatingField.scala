@@ -22,7 +22,7 @@ object ValidatingField {
   }
 
   /** JSON Codec Support. */
-  implicit def codec[T, V <: Validator](
+  implicit def codec[T, V](
       implicit e: Encoder[T],
       d: Decoder[T]
   ): Codec[ValidatingField[T, V]] =

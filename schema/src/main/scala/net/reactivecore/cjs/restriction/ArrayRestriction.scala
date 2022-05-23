@@ -3,44 +3,74 @@ package net.reactivecore.cjs.restriction
 import io.circe.Codec
 import io.circe.generic.semiauto
 import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.restriction.ArrayRestriction.TypeOrTypesValidator
 import net.reactivecore.cjs.util.Codecs
 import net.reactivecore.cjs.validator.array._
 import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
 
 case class ArrayRestriction(
-    items: Option[Either[Schema, Vector[Schema]]] = None, // Left: V2020_12, Right: V2019_09
-    contains: Option[Schema] = None,
-    minItems: Option[Long] = None,
-    maxItems: Option[Long] = None,
-    uniqueItems: Option[Boolean] = None,
-    unevaluatedItems: Option[Schema] = None,
-    prefixItems: Option[Vector[Schema]] = None,
+    items: OValidatingField[Either[Schema, Vector[Schema]], TypeOrTypesValidator.type] =
+      None, // Left: V2020_12, Right: V2019_09
+    contains: OValidatingField[Schema, ContainsValidator] = None,
+    minItems: OValidatingField[Long, SimpleValidator.MinItems] = None,
+    maxItems: OValidatingField[Long, SimpleValidator.MaxItems] = None,
+    uniqueItems: OValidatingField[Boolean, SimpleValidator.Unique.type] = None,
+    unevaluatedItems: OValidatingField[Schema, UnevaluatedItemsValidator] = None,
+    prefixItems: OValidatingField[Vector[Schema], PrefixValidator] = None,
     minContains: Option[Int] = None,
     maxContains: Option[Int] = None,
-    additionalItems: Option[Schema] = None // V2019_09
+    additionalItems: OValidatingField[Schema, ItemValidator] = None // V2019_09
 ) {
 
   /** Items in V2019 Notation */
   def v2019Items: Option[Vector[Schema]] = {
-    items.flatMap(_.right.toOption)
+    items.flatMap(_.value.right.toOption)
   }
 
   /** Items in V2020 Notation */
   def v2020Items: Option[Schema] = {
-    items.flatMap(_.left.toOption)
+    items.flatMap(_.value.left.toOption)
   }
 
   /** Returns the number of items, the restriction defines using prefixItems or V2019 Items notation. */
-  def effectivePrefixSize: Int = {
-    prefixItems.orElse(v2019Items).map(_.size).getOrElse(0)
-  }
+  def effectivePrefixSize: Int = 0 /*{
+    prefixItems.map(_.value).orElse(v2019Items).map(_.size).getOrElse(0)
+  }*/
 }
 
 object ArrayRestriction {
-  private implicit def eitherSchemaOrArrayCodec: Codec[Either[Schema, Vector[Schema]]] =
+  private implicit def eitherSchemaOrArrayCodec: Codec[Either[Schema, Vector[Schema]]] = {
     Codecs.disjunctEitherCodec[Schema, Vector[Schema]]
+  }
 
   implicit lazy val codec: Codec.AsObject[ArrayRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
+
+  case object TypeOrTypesValidator
+  implicit val itemsValidatorProvider: ValidationProvider[
+    (ValidatingField[Either[Schema, Vector[Schema]], TypeOrTypesValidator.type], ArrayRestriction)
+  ] =
+    ValidationProvider.forFieldWithContext { (origin, value, context) =>
+      value match {
+        case Left(value)  => ItemValidator(origin, value, context.effectivePrefixSize)
+        case Right(value) => PrefixValidator(origin, value)
+      }
+    }
+
+  /*
+  implicit val containsValidationProvider: ValidationProvider[
+    (ValidatingField[Schema, ContainsValidator], ArrayRestriction)
+  ] = ValidationProvider.forFieldWithContext { (origin, value, context) =>
+    val minContains = context.minContains.getOrElse(1)
+    val maxContains = context.maxContains
+    ContainsValidator(value.validator(origin), minContains, maxContains)
+  }
+
+   */
+
+  implicit val validationProvider: ValidationProvider[ArrayRestriction] =
+    ValidationProvider.visitingSequental[ArrayRestriction]
+
+  /*
 
   implicit val validationProvider: ValidationProvider[ArrayRestriction] = ValidationProvider.withOrigin {
     (origin, restriction) =>
@@ -91,4 +121,5 @@ object ArrayRestriction {
         }
       )
   }
+   */
 }

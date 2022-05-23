@@ -29,6 +29,14 @@ object ValidationProvider {
     }
   }
 
+  def forFieldWithContext[T, V, C](
+      f: (SchemaOrigin, T, C) => Validator
+  ): ValidationProvider[(ValidatingField[T, V], C)] = {
+    withOrigin[(ValidatingField[T, V], C)] { case (origin, (field, context)) =>
+      f(origin, field.value, context)
+    }
+  }
+
   def empty[T]: ValidationProvider[T] = ValidationProvider.instance(_ => Validator.success)
 
   implicit def forOptionalField[T, V](
