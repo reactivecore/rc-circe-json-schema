@@ -3,9 +3,8 @@ package net.reactivecore.cjs.restriction
 import io.circe.generic.semiauto
 import io.circe.{Codec, Decoder, Encoder, Json}
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{EnumValidator, Validator}
+import net.reactivecore.cjs.validator.{EnumValidator, ValidationProvider, Validator}
 import net.reactivecore.cjs.DataTypeName
-import net.reactivecore.cjs.validator.provider.ValidationProvider
 
 case class EnumRestriction(
     enum: Option[Vector[Json]] = None

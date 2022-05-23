@@ -3,7 +3,7 @@ package net.reactivecore.cjs
 import io.circe.generic.semiauto
 import io.circe.{Codec, Decoder, Encoder, Json}
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.provider.ValidationProvider
+import net.reactivecore.cjs.validator.ValidationProvider
 
 /** Human description of a Schema */
 case class Description(

@@ -3,9 +3,15 @@ package net.reactivecore.cjs
 import io.circe.{Codec, Decoder, Encoder, Json, JsonObject}
 import io.circe.syntax._
 import net.reactivecore.cjs.util.{Codecs, VectorMap}
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 import net.reactivecore.cjs.validator.Validator.Compound
-import net.reactivecore.cjs.validator.provider.ValidationProvider
 
 /** Describes sub definitions. */
 case class Definitions(

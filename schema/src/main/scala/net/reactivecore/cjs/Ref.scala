@@ -4,8 +4,14 @@ import io.circe.{Codec, Decoder, Encoder, Json, JsonObject}
 import io.circe.syntax._
 import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.provider.ValidationProvider
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 
 /** Contains reference fields within a Schema. */
 case class Ref(

@@ -1,8 +1,7 @@
 package net.reactivecore.cjs.restriction
 
 import io.circe.{Codec, Decoder, Encoder}
-import net.reactivecore.cjs.validator.Validator
-import net.reactivecore.cjs.validator.provider.ValidationProvider
+import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
 import shapeless._
 
 /**

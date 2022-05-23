@@ -3,9 +3,8 @@ package net.reactivecore.cjs.restriction
 import io.circe.generic.semiauto
 import io.circe.{Codec, Decoder, Encoder}
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{TypesValidator, Validator}
+import net.reactivecore.cjs.validator.{TypesValidator, ValidationProvider, Validator}
 import net.reactivecore.cjs.DataTypeName
-import net.reactivecore.cjs.validator.provider.ValidationProvider
 
 case class DataTypeRestriction(
     `type`: Option[DataTypeRestriction.TypeOrTypes] = None

@@ -5,8 +5,7 @@ import io.circe.generic.semiauto
 import net.reactivecore.cjs.Schema
 import net.reactivecore.cjs.util.Codecs
 import net.reactivecore.cjs.validator.array._
-import net.reactivecore.cjs.validator.Validator
-import net.reactivecore.cjs.validator.provider.ValidationProvider
+import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
 
 case class ArrayRestriction(
     items: Option[Either[Schema, Vector[Schema]]] = None, // Left: V2020_12, Right: V2019_09

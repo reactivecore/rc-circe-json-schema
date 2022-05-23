@@ -5,7 +5,6 @@ import io.circe.generic.semiauto
 import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 import net.reactivecore.cjs.util.Codecs
 import net.reactivecore.cjs.validator._
-import net.reactivecore.cjs.validator.provider.ValidationProvider
 import net.reactivecore.cjs.{Schema, SchemaOrigin}
 
 /** Further restrictions of a type. */

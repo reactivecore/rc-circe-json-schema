@@ -2,8 +2,14 @@ package net.reactivecore.cjs.validator.obj
 
 import io.circe.{Json, JsonObject}
 import net.reactivecore.cjs.Schema
-import net.reactivecore.cjs.validator.provider.ValidationProvider
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 
 case class PropertyNamesValidator(validator: Validator) extends ObjectValidator {
   override def validateStatefulObject(state: ValidationState, json: JsonObject)(

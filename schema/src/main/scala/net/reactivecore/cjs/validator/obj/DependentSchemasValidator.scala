@@ -3,7 +3,6 @@ import io.circe.{Json, JsonObject}
 import net.reactivecore.cjs.Schema
 import net.reactivecore.cjs.util.VectorMap
 import net.reactivecore.cjs.validator._
-import net.reactivecore.cjs.validator.provider.ValidationProvider
 
 case class DependentSchemasValidator(withSchemas: Map[String, Validator]) extends ObjectValidator {
   override def validateStatefulObject(state: ValidationState, json: JsonObject)(

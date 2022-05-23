@@ -1,8 +1,7 @@
 package net.reactivecore.cjs.validator.obj
 import io.circe.{Json, JsonObject}
 import net.reactivecore.cjs.util.VectorMap
-import net.reactivecore.cjs.validator.provider.ValidationProvider
-import net.reactivecore.cjs.validator.{ValidationResult, Violation}
+import net.reactivecore.cjs.validator.{ValidationProvider, ValidationResult, Violation}
 
 case class DependentRequiredValidator(dependentRequired: VectorMap[String, Vector[String]]) extends StatelessValidator {
   override def validate(obj: JsonObject): ValidationResult = {

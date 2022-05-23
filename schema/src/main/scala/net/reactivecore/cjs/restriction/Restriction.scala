@@ -3,7 +3,7 @@ package net.reactivecore.cjs.restriction
 import io.circe.Codec
 import net.reactivecore.cjs.Definitions
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.provider.ValidationProvider
+import net.reactivecore.cjs.validator.ValidationProvider
 
 /**
   * Contains all Restrictions.
@@ -21,5 +21,5 @@ case class Restriction(
 
 object Restriction {
   implicit def codec: Codec.AsObject[Restriction] = Codecs.combineCodecG
-  implicit val validationProvider: ValidationProvider[Restriction] = ValidationProvider.combineG[Restriction]
+  implicit val validationProvider: ValidationProvider[Restriction] = ValidationProvider.combined[Restriction]
 }

@@ -1,8 +1,7 @@
 package net.reactivecore.cjs.restriction
 
 import io.circe._
-import net.reactivecore.cjs.validator.provider.ValidationProvider
-import net.reactivecore.cjs.validator.{ConstValidator, Validator}
+import net.reactivecore.cjs.validator.{ConstValidator, ValidationProvider, Validator}
 
 /**
   * Restricts to a constant value.

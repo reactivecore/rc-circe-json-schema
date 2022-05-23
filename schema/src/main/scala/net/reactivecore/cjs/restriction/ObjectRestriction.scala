@@ -5,7 +5,7 @@ import io.circe.generic.semiauto
 import net.reactivecore.cjs.util.{Codecs, VectorMap}
 import net.reactivecore.cjs.validator.obj._
 import net.reactivecore.cjs.Schema
-import net.reactivecore.cjs.validator.provider.{SequenceValidationProvider, ValidationProvider}
+import net.reactivecore.cjs.validator.ValidationProvider
 
 case class ObjectRestriction(
     properties: OValidatingField[VectorMap[String, Schema], PropertiesValidator] = None,
@@ -23,5 +23,6 @@ case class ObjectRestriction(
 object ObjectRestriction {
   implicit lazy val codec: Codec.AsObject[ObjectRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  implicit val validationProvider: ValidationProvider[ObjectRestriction] = SequenceValidationProvider[ObjectRestriction]
+  implicit val validationProvider: ValidationProvider[ObjectRestriction] =
+    ValidationProvider.visitingSequental[ObjectRestriction]
 }
