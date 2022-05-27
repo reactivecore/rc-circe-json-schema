@@ -14,11 +14,17 @@ case class ValidatingField[T, V](value: T) extends AnyVal
 
 object ValidatingField {
 
-  /** Provides a validation provider for Validators with trivial constructor */
+  /** Provides a validation provider for Validators which just take the value */
   implicit def trivialValidationProvider[T, V <: Validator](
       implicit generic: Generic.Aux[V, T :: HNil]
   ): ValidationProvider[ValidatingField[T, V]] = { (_, value) =>
     generic.from(value.value :: HNil)
+  }
+
+  /** Empty validation providers for fields which do not have one. */
+  implicit def successValidationProvider[T]: ValidationProvider[ValidatingField[T, Validator.Success.type]] = {
+    (_, _) =>
+      Validator.success
   }
 
   /** JSON Codec Support. */

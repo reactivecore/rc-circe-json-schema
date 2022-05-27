@@ -2,7 +2,14 @@ package net.reactivecore.cjs.validator.array
 
 import io.circe.Json
 import net.reactivecore.cjs.{Schema, SchemaOrigin}
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 
 case class PrefixValidator(prefix: Vector[Validator]) extends ArrayValidator {
 
@@ -30,4 +37,6 @@ object PrefixValidator {
     }
     PrefixValidator(prefixValidators)
   }
+
+  implicit val provider = ValidationProvider.forField[Vector[Schema], PrefixValidator](PrefixValidator.apply)
 }

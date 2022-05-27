@@ -1,7 +1,8 @@
 package net.reactivecore.cjs.validator.array
 
 import io.circe.Json
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.validator._
 
 case class UnevaluatedItemsValidator(underlying: Validator) extends ArrayValidator {
   override def validateArrayStateful(
@@ -21,4 +22,10 @@ case class UnevaluatedItemsValidator(underlying: Validator) extends ArrayValidat
   }
 
   override def precedence: Int = 2
+}
+
+object UnevaluatedItemsValidator {
+  implicit val provider = ValidationProvider.forField[Schema, UnevaluatedItemsValidator] { (origin, schema) =>
+    UnevaluatedItemsValidator(schema.validator(origin))
+  }
 }
