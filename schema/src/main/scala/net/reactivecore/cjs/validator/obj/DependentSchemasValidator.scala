@@ -18,7 +18,7 @@ case class DependentSchemasValidator(withSchemas: Map[String, Validator]) extend
 object DependentSchemasValidator {
   implicit val provider = ValidationProvider.forField[VectorMap[String, Schema], DependentSchemasValidator] {
     (origin, dependentSchemas) =>
-      val withSchemas = dependentSchemas.mapValues(_.validator(origin))
+      val withSchemas = dependentSchemas.mapValues(_.validator(origin)).view.toMap
       DependentSchemasValidator(withSchemas)
   }
 }

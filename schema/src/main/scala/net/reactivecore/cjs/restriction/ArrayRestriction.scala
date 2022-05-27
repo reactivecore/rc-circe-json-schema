@@ -3,13 +3,13 @@ package net.reactivecore.cjs.restriction
 import io.circe.Codec
 import io.circe.generic.semiauto
 import net.reactivecore.cjs.Schema
-import net.reactivecore.cjs.restriction.ArrayRestriction.{AdditionalItems, TypeOrTypes}
+import net.reactivecore.cjs.restriction.ArrayRestriction.{AdditionalItems, Items}
 import net.reactivecore.cjs.util.Codecs
 import net.reactivecore.cjs.validator.array._
 import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
 
 case class ArrayRestriction(
-    items: OValidatingField[Either[Schema, Vector[Schema]], TypeOrTypes.type] = None, // Left: V2020_12, Right: V2019_09
+    items: OValidatingField[Either[Schema, Vector[Schema]], Items.type] = None, // Left: V2020_12, Right: V2019_09
     contains: OValidatingField[Schema, ContainsValidator] = None,
     minItems: OValidatingField[Long, SimpleValidator.MinItems] = None,
     maxItems: OValidatingField[Long, SimpleValidator.MaxItems] = None,
@@ -44,9 +44,10 @@ object ArrayRestriction {
 
   implicit lazy val codec: Codec.AsObject[ArrayRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  case object TypeOrTypes
+  // Support for Items (can be 2019 or 2020)
+  case object Items
   implicit val itemsValidatorProvider: ValidationProvider[
-    (ValidatingField[Either[Schema, Vector[Schema]], TypeOrTypes.type], ArrayRestriction)
+    (ValidatingField[Either[Schema, Vector[Schema]], Items.type], ArrayRestriction)
   ] =
     ValidationProvider.forFieldWithContext { (origin, value, context) =>
       value match {
@@ -55,6 +56,7 @@ object ArrayRestriction {
       }
     }
 
+  // Support for Unique
   implicit def uniqueValidationProvider: ValidationProvider[ValidatingField[Boolean, SimpleValidator.Unique.type]] =
     ValidationProvider.forField { case (_, value) =>
       if (value) {
@@ -64,6 +66,7 @@ object ArrayRestriction {
       }
     }
 
+  // Support for Contains
   implicit val containsValidationProvider: ValidationProvider[
     (ValidatingField[Schema, ContainsValidator], ArrayRestriction)
   ] = ValidationProvider.forFieldWithContext { (origin, value, context) =>
@@ -72,8 +75,8 @@ object ArrayRestriction {
     ContainsValidator(value.validator(origin), minContains, maxContains)
   }
 
+  // Support for AdditionalItems
   object AdditionalItems
-
   implicit val additionalItemsProvider =
     ValidationProvider.forFieldWithContext[Schema, AdditionalItems.type, ArrayRestriction] { (origin, value, context) =>
       // V2019, additionalItems is only used if items is given
