@@ -50,13 +50,14 @@ abstract class SimpleValidator(name: String)(
 object SimpleValidator {
   case class MinItems(minItems: Long) extends SimpleValidator("minItems")(_.size >= minItems)
   case class MaxItems(maxItems: Long) extends SimpleValidator("maxItems")(_.size <= maxItems)
+
   case object Unique
       extends SimpleValidator("unique")({ array =>
         val result = array.size == array.distinct.size
         result
       }) {
-    // Support for Unique
-    implicit def uniqueValidationProvider: ValidationProvider[ValidatingField[Boolean, SimpleValidator.Unique.type]] =
+
+    implicit def validationProvider: ValidationProvider[ValidatingField[Boolean, SimpleValidator.Unique.type]] =
       ValidationProvider.forField { case (_, value) =>
         if (value) {
           SimpleValidator.Unique

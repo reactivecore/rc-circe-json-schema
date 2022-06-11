@@ -27,7 +27,7 @@ case class SchemaOrigin(
     * Helper for building validators.
     * Entering a keyword, increasing path.
     *
-    * The the word is not in the vocabulary, it should be ignored.
+    * If the word is not in the vocabulary, it should be ignored.
     */
   def validatorFor(name: String)(f: SchemaOrigin => Validator): Validator = {
     // TODO: Check vocabulary
@@ -37,8 +37,6 @@ case class SchemaOrigin(
   /**
     * Helper for building validators.
     * Entering a keyword, increasing path.
-    *
-    * The the word is not in the vocabulary, it should be ignored.
     */
   def validatorForIdx(idx: Int)(f: SchemaOrigin => Validator): Validator = {
     f(enterArray(idx))
