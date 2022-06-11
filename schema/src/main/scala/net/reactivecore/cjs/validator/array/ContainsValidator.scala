@@ -1,7 +1,16 @@
 package net.reactivecore.cjs.validator.array
 
 import io.circe.Json
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.restriction.{ArrayRestriction, ValidatingField}
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 
 case class ContainsValidator(
     underlying: Validator,
@@ -25,5 +34,16 @@ case class ContainsValidator(
         s"Contains mismatch, expected min: ${min} to ${max.getOrElse("inf")}, got ${validIndices.size}"
       )
     }
+  }
+}
+
+object ContainsValidator {
+
+  implicit val validationProvider: ValidationProvider[
+    (ValidatingField[Schema, ContainsValidator], ArrayRestriction)
+  ] = ValidationProvider.forFieldWithContext { (origin, value, context) =>
+    val minContains = context.minContains.map(_.value).getOrElse(1)
+    val maxContains = context.maxContains.map(_.value)
+    ContainsValidator(value.validator(origin), minContains, maxContains)
   }
 }

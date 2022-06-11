@@ -1,7 +1,15 @@
 package net.reactivecore.cjs.validator.array
 
 import io.circe.Json
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.restriction.ValidatingField
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 
 trait ArrayValidator extends Validator {
   final override def validateStateful(state: ValidationState, json: Json)(
@@ -46,5 +54,15 @@ object SimpleValidator {
       extends SimpleValidator("unique")({ array =>
         val result = array.size == array.distinct.size
         result
-      })
+      }) {
+    // Support for Unique
+    implicit def uniqueValidationProvider: ValidationProvider[ValidatingField[Boolean, SimpleValidator.Unique.type]] =
+      ValidationProvider.forField { case (_, value) =>
+        if (value) {
+          SimpleValidator.Unique
+        } else {
+          Validator.success
+        }
+      }
+  }
 }

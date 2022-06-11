@@ -56,25 +56,6 @@ object ArrayRestriction {
       }
     }
 
-  // Support for Unique
-  implicit def uniqueValidationProvider: ValidationProvider[ValidatingField[Boolean, SimpleValidator.Unique.type]] =
-    ValidationProvider.forField { case (_, value) =>
-      if (value) {
-        SimpleValidator.Unique
-      } else {
-        Validator.success
-      }
-    }
-
-  // Support for Contains
-  implicit val containsValidationProvider: ValidationProvider[
-    (ValidatingField[Schema, ContainsValidator], ArrayRestriction)
-  ] = ValidationProvider.forFieldWithContext { (origin, value, context) =>
-    val minContains = context.minContains.map(_.value).getOrElse(1)
-    val maxContains = context.maxContains.map(_.value)
-    ContainsValidator(value.validator(origin), minContains, maxContains)
-  }
-
   // Support for AdditionalItems
   object AdditionalItems
   implicit val additionalItemsProvider =

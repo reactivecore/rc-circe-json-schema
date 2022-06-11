@@ -2,6 +2,7 @@ package net.reactivecore.cjs.validator
 
 import io.circe.Json
 import net.reactivecore.cjs.DataTypeName
+import net.reactivecore.cjs.restriction.{DataTypeRestriction, ValidatingField}
 
 case class TypesValidator(types: Vector[DataTypeName]) extends SimpleContextFreeValidator(s"DataTypes ${types}") {
 
@@ -18,4 +19,12 @@ case class TypesValidator(types: Vector[DataTypeName]) extends SimpleContextFree
       }
     }
   }
+}
+
+object TypesValidator {
+  implicit val validationProvider
+      : ValidationProvider[ValidatingField[DataTypeRestriction.TypeOrTypes, TypesValidator]] =
+    ValidationProvider.forField { case (_, value) =>
+      TypesValidator(value.fold(Vector(_), identity))
+    }
 }
