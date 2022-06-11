@@ -11,7 +11,7 @@ Note: the validator is in early state and API may not be stable.
 ## Features
 
 - Implementing JSON Schema 2020-12, 2019-09
-- All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing (except `unknownKeyword.json`, `vocabulary.json`)
+- All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing (except `vocabulary.json`)
 - You can bring your own Downloader (using Tagless Final Pattern)
 
 ## Known Limitations
