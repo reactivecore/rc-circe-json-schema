@@ -21,5 +21,5 @@ case class Restriction(
 
 object Restriction {
   implicit def codec: Codec.AsObject[Restriction] = Codecs.combineCodecG
-  implicit val validationProvider: ValidationProvider[Restriction] = ValidationProvider.combineG[Restriction]
+  implicit val validationProvider: ValidationProvider[Restriction] = ValidationProvider.combined[Restriction]
 }

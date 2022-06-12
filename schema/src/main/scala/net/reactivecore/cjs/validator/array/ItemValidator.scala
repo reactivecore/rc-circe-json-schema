@@ -1,6 +1,7 @@
 package net.reactivecore.cjs.validator.array
 
 import io.circe.Json
+import net.reactivecore.cjs.{Schema, SchemaOrigin}
 import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
 
 /** Validator for List Items */
@@ -22,4 +23,10 @@ case class ItemValidator(
   }
 
   override def children: Vector[Validator] = Vector(underlying)
+}
+
+object ItemValidator {
+  def apply(origin: SchemaOrigin, schema: Schema, prefixSize: Int): ItemValidator = {
+    ItemValidator(schema.validator(origin), prefixSize)
+  }
 }

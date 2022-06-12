@@ -1,8 +1,15 @@
 package net.reactivecore.cjs.validator.obj
 
 import io.circe.JsonObject
+import net.reactivecore.cjs.Schema
 import net.reactivecore.cjs.util.VectorMap
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator
+}
 
 case class PropertiesValidator(validators: VectorMap[String, Validator]) extends ObjectValidator {
   override def validateStatefulObject(state: ValidationState, json: JsonObject)(
@@ -22,4 +29,14 @@ case class PropertiesValidator(validators: VectorMap[String, Validator]) extends
   }
 
   override def children: Vector[Validator] = validators.toVector.map(_._2)
+}
+
+object PropertiesValidator {
+  implicit val provider = ValidationProvider.forField[VectorMap[String, Schema], PropertiesValidator] {
+    (origin, properties) =>
+      val propertySchemas = properties.map { case (key, schema) =>
+        key -> schema.validator(origin.enterObject(key))
+      }
+      PropertiesValidator(propertySchemas)
+  }
 }

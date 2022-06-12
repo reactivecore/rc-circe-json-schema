@@ -7,7 +7,7 @@ import net.reactivecore.cjs.validator.{EnumValidator, ValidationProvider, Valida
 import net.reactivecore.cjs.DataTypeName
 
 case class EnumRestriction(
-    enum: Option[Vector[Json]] = None
+    enum: OValidatingField[Vector[Json], EnumValidator] = None
 )
 
 object EnumRestriction {
@@ -20,13 +20,5 @@ object EnumRestriction {
   implicit val typeCodec: Codec[TypeOrTypes] = Codecs.disjunctEitherCodec[DataTypeName, Vector[DataTypeName]]
   implicit val codec: Codec.AsObject[EnumRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  implicit val validationProvider: ValidationProvider[EnumRestriction] = ValidationProvider.instance { restriction =>
-    Validator.sequence(
-      restriction.`enum` match {
-        case None => Validator.success
-        case Some(possibleValues) =>
-          EnumValidator(possibleValues)
-      }
-    )
-  }
+  implicit val validationProvider: ValidationProvider[EnumRestriction] = ValidationProvider.visitingSequental
 }

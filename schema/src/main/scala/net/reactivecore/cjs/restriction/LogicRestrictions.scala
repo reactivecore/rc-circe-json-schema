@@ -5,7 +5,7 @@ import io.circe.generic.semiauto
 import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 import net.reactivecore.cjs.util.Codecs
 import net.reactivecore.cjs.validator._
-import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.{Schema, SchemaOrigin}
 
 /** Further restrictions of a type. */
 case class LogicRestrictions(
@@ -21,18 +21,18 @@ case class LogicRestrictions(
 object LogicRestrictions {
   implicit lazy val codec: Codec.AsObject[LogicRestrictions] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  implicit lazy val validationProvider: ValidationProvider[LogicRestrictions] = ValidationProvider.withUri {
-    (parentId, path, restrictions) =>
+  implicit lazy val validationProvider: ValidationProvider[LogicRestrictions] = ValidationProvider.withOrigin {
+    (context, restrictions) =>
       allOf(
-        logicChain(parentId, path.enterObject("oneOf"), restrictions.oneOf, x => OneOfValidator(x.toVector)),
-        logicChain(parentId, path.enterObject("anyOf"), restrictions.anyOf, x => AnyOfValidator(x.toVector)),
-        logicChain(parentId, path.enterObject("allOf"), restrictions.allOf, x => AllOfValidator(x.toVector)),
+        logicChain(context.enterObject("oneOf"), restrictions.oneOf, x => OneOfValidator(x.toVector)),
+        logicChain(context.enterObject("anyOf"), restrictions.anyOf, x => AnyOfValidator(x.toVector)),
+        logicChain(context.enterObject("allOf"), restrictions.allOf, x => AllOfValidator(x.toVector)),
         restrictions.not
           .map { schema =>
-            NotValidator(schema.validator(parentId, path))
+            NotValidator(schema.validator(context))
           }
           .getOrElse(Validator.success),
-        ifThenElse(parentId, path, restrictions)
+        ifThenElse(context, restrictions)
       )
   }
 
@@ -46,21 +46,20 @@ object LogicRestrictions {
     }
   }
 
-  private def ifThenElse(parentId: RefUri, path: JsonPointer, logicRestrictions: LogicRestrictions): Validator = {
+  private def ifThenElse(origin: SchemaOrigin, logicRestrictions: LogicRestrictions): Validator = {
     val got = for {
       i <- logicRestrictions.`if`
     } yield {
-      val ic = i.validator(parentId, path)
-      val t = logicRestrictions.`then`.map(_.validator(parentId, path))
-      val e = logicRestrictions.`else`.map(_.validator(parentId, path))
+      val ic = i.validator(origin)
+      val t = logicRestrictions.`then`.map(_.validator(origin))
+      val e = logicRestrictions.`else`.map(_.validator(origin))
       IfThenElseValidator(ic, t, e)
     }
     got.getOrElse(Validator.success)
   }
 
   private def logicChain(
-      parentId: RefUri,
-      path: JsonPointer,
+      origin: SchemaOrigin,
       input: Option[Vector[Schema]],
       combiner: Seq[Validator] => Validator
   ): Validator = {
@@ -68,7 +67,7 @@ object LogicRestrictions {
       case None => Validator.success
       case Some(schemas) =>
         val validators = schemas.zipWithIndex.map { case (schema, idx) =>
-          schema.validator(parentId, path.enterArray(idx))
+          schema.validator(origin.enterArray(idx))
         }
         combiner(validators)
     }

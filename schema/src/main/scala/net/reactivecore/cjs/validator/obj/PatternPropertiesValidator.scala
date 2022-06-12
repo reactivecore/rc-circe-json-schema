@@ -1,6 +1,15 @@
 package net.reactivecore.cjs.validator.obj
 import io.circe.JsonObject
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.util.VectorMap
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 
 import java.util.regex.Pattern
 
@@ -22,5 +31,15 @@ case class PatternPropertiesValidator(regexSchemas: Vector[(Pattern, Validator)]
       evaluatedProperties = state.evaluatedProperties ++ props
     )
     (updatedState, ValidationResult(violations))
+  }
+}
+
+object PatternPropertiesValidator {
+  implicit val provider = ValidationProvider.forField[VectorMap[String, Schema], PatternPropertiesValidator] {
+    (origin, patternProperties) =>
+      val regexSchemas: Vector[(Pattern, Validator)] = patternProperties.toVector.map { case (pattern, schema) =>
+        Pattern.compile(pattern) -> schema.validator(origin)
+      }
+      PatternPropertiesValidator(regexSchemas)
   }
 }

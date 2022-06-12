@@ -1,40 +1,77 @@
 package net.reactivecore.cjs.validator
 
-import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
+import net.reactivecore.cjs.SchemaOrigin
+import net.reactivecore.cjs.restriction.ValidatingField
 import shapeless._
+import shapeless.labelled.FieldType
 
-/** Typeclass which provides Validators for Restrictions */
+/** Typeclass which provides Validators for Restrictions.
+  * @tparam T the data from which a validator is created. Some validation providers can automatically be deduced from
+  *          ValidatingFields.
+  */
 trait ValidationProvider[T] {
-  def apply(parentId: RefUri, path: JsonPointer, restriction: T): Validator
+  def apply(origin: SchemaOrigin, restriction: T): Validator
 }
 
 object ValidationProvider {
 
-  def instance[T](instance: T => Validator): ValidationProvider[T] = { (_, _, restriction: T) =>
+  def instance[T](instance: T => Validator): ValidationProvider[T] = { (_, restriction: T) =>
     instance(restriction)
   }
 
-  def withUri[T](instance: (RefUri, JsonPointer, T) => Validator): ValidationProvider[T] = { (uri, path, restriction) =>
-    instance(uri, path, restriction)
+  def withOrigin[T](instance: (SchemaOrigin, T) => Validator): ValidationProvider[T] = { (origin, restriction: T) =>
+    instance(origin, restriction)
+  }
+
+  def forField[T, V](f: (SchemaOrigin, T) => Validator): ValidationProvider[ValidatingField[T, V]] = {
+    withOrigin[ValidatingField[T, V]] { (origin, field) =>
+      f(origin, field.value)
+    }
+  }
+
+  def forFieldWithContext[T, V, C](
+      f: (SchemaOrigin, T, C) => Validator
+  ): ValidationProvider[(ValidatingField[T, V], C)] = {
+    withOrigin[(ValidatingField[T, V], C)] { case (origin, (field, context)) =>
+      f(origin, field.value, context)
+    }
   }
 
   def empty[T]: ValidationProvider[T] = ValidationProvider.instance(_ => Validator.success)
+
+  implicit def forOptionalField[T, V](
+      implicit fieldProvider: ValidationProvider[ValidatingField[T, V]]
+  ): ValidationProvider[Option[ValidatingField[T, V]]] = { (origin, value) =>
+    value match {
+      case None        => Validator.success
+      case Some(given) => fieldProvider.apply(origin, given)
+    }
+  }
+
+  implicit def forOptionalFieldWithContext[T, V, C](
+      implicit fieldProvider: ValidationProvider[(ValidatingField[T, V], C)]
+  ): ValidationProvider[(Option[ValidatingField[T, V]], C)] = { (origin, value) =>
+    value._1 match {
+      case None        => Validator.success
+      case Some(given) => fieldProvider.apply(origin, (given, value._2))
+    }
+  }
 
   /** Helper trait for synthetic validation provider for case classes */
   trait CombinedValidationProvider[T] extends ValidationProvider[T]
 
   object CombinedValidationProvider {
-    implicit val nil: CombinedValidationProvider[HNil] = (_, _, _: HNil) => Validator.success
+    implicit val nil: CombinedValidationProvider[HNil] = (_, _: HNil) => Validator.success
 
     implicit def elem[H, T <: HList](
         implicit hc: ValidationProvider[H],
         tc: CombinedValidationProvider[T]
     ): CombinedValidationProvider[H :: T] =
-      (parentId, path, restriction: H :: T) => {
+      (context, restriction: H :: T) => {
         Validator.sequence(
           Seq(
-            hc(parentId, path, restriction.head),
-            tc(parentId, path, restriction.tail)
+            hc(context, restriction.head),
+            tc(context, restriction.tail)
           ): _*
         )
       }
@@ -42,12 +79,92 @@ object ValidationProvider {
     implicit def generic[T, G](
         implicit g: Generic.Aux[T, G],
         p: CombinedValidationProvider[G]
-    ): CombinedValidationProvider[T] = { (parentId, path, restriction: T) =>
-      p.apply(parentId, path, g.to(restriction))
+    ): CombinedValidationProvider[T] = { (context, restriction: T) =>
+      p.apply(context, g.to(restriction))
     }
   }
 
-  def combineG[T](implicit combinedValidationProvider: CombinedValidationProvider[T]): ValidationProvider[T] = {
+  /**
+    * Generates a simple sequence validation provider for generic types.
+    * (all types are evaluated without entering an object)
+    */
+  def combined[T](implicit combinedValidationProvider: CombinedValidationProvider[T]): ValidationProvider[T] = {
     combinedValidationProvider
   }
+
+  /**
+    * Helper for generating [[visitingSequental]]
+    * @tparam T LabelledGeneric instance.
+    * @tparam C context class (enclosing class)
+    */
+  trait VisitingSequentialHelper[T, C] {
+    def apply(context: C): ValidationProvider[T]
+  }
+
+  object VisitingSequentialHelper {
+    implicit def hnilHelper[C]: VisitingSequentialHelper[HNil, C] = (_: C) => ValidationProvider.empty
+
+    implicit def hlistHelper[K <: Symbol, H, T <: HList, V <: Validator, C](
+        implicit p: ValidationProvider[H],
+        tailHelper: VisitingSequentialHelper[T, C],
+        w: Witness.Aux[K]
+    ): VisitingSequentialHelper[FieldType[K, H] :: T, C] =
+      new VisitingSequentialHelper[FieldType[K, H] :: T, C] {
+        val fieldName = w.value.name
+
+        override def apply(context: C): ValidationProvider[FieldType[K, H] :: T] = {
+          ValidationProvider.withOrigin { (origin, value) =>
+            Validator.sequence(
+              p(origin.enterObject(fieldName), value.head),
+              tailHelper.apply(context)(origin, value.tail)
+            )
+          }
+        }
+      }
+
+    implicit def hlistHelperWithContext[K <: Symbol, H, T <: HList, V <: Validator, C](
+        implicit p: ValidationProvider[(H, C)],
+        tailHelper: VisitingSequentialHelper[T, C],
+        w: Witness.Aux[K]
+    ): VisitingSequentialHelper[FieldType[K, H] :: T, C] =
+      new VisitingSequentialHelper[FieldType[K, H] :: T, C] {
+        val fieldName = w.value.name
+
+        override def apply(context: C): ValidationProvider[FieldType[K, H] :: T] = {
+          ValidationProvider.withOrigin { (origin, value) =>
+            Validator.sequence(
+              p(origin.enterObject(fieldName), value.head -> context),
+              tailHelper.apply(context)(origin, value.tail)
+            )
+          }
+        }
+      }
+  }
+
+  /** Typeclass for generating [[visitingSequental]] */
+  trait VisitingSequentialProvider[C] {
+    def apply: ValidationProvider[C]
+  }
+
+  object VisitingSequentialProvider {
+    implicit def generate[C, G](
+        implicit labelledGeneric: LabelledGeneric.Aux[C, G],
+        helper: VisitingSequentialHelper[G, C]
+    ): VisitingSequentialProvider[C] = {
+      new VisitingSequentialProvider[C] {
+        override def apply: ValidationProvider[C] = { (origin: SchemaOrigin, restriction: C) =>
+          {
+            helper.apply(restriction).apply(origin, labelledGeneric.to(restriction))
+          }
+        }
+      }
+    }
+  }
+
+  /**
+    * Generate a validation provider for a case class building up from perhaps context-aware Validation Providers.
+    * Each sub field's name will be visited (and can be disabled when having a vocabulary)
+    */
+  def visitingSequental[T](implicit p: VisitingSequentialProvider[T]): ValidationProvider[T] = p.apply
+
 }

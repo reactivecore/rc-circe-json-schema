@@ -1,9 +1,17 @@
 package net.reactivecore.cjs.validator.array
 
 import io.circe.Json
-import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
+import net.reactivecore.cjs.{Schema, SchemaOrigin}
+import net.reactivecore.cjs.validator.{
+  ValidationContext,
+  ValidationProvider,
+  ValidationResult,
+  ValidationState,
+  Validator,
+  Violation
+}
 
-case class PrefixValdiator(prefix: Vector[Validator]) extends ArrayValidator {
+case class PrefixValidator(prefix: Vector[Validator]) extends ArrayValidator {
 
   override def validateArrayStateful(state: ValidationState, array: Vector[Json])(
       implicit context: ValidationContext
@@ -19,4 +27,16 @@ case class PrefixValdiator(prefix: Vector[Validator]) extends ArrayValidator {
   }
 
   override def children: Vector[Validator] = prefix
+}
+
+object PrefixValidator {
+
+  def apply(origin: SchemaOrigin, prefix: Vector[Schema]): PrefixValidator = {
+    val prefixValidators = prefix.zipWithIndex.map { case (schema, idx) =>
+      schema.validator(origin.enterArray(idx))
+    }
+    PrefixValidator(prefixValidators)
+  }
+
+  implicit val provider = ValidationProvider.forField[Vector[Schema], PrefixValidator](PrefixValidator.apply)
 }

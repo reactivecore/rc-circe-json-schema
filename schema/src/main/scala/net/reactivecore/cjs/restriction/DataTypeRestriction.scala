@@ -2,20 +2,13 @@ package net.reactivecore.cjs.restriction
 
 import io.circe.generic.semiauto
 import io.circe.{Codec, Decoder, Encoder}
-import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{TypesValidator, ValidationProvider, Validator}
 import net.reactivecore.cjs.DataTypeName
+import net.reactivecore.cjs.util.Codecs
+import net.reactivecore.cjs.validator.{TypesValidator, ValidationProvider}
 
 case class DataTypeRestriction(
-    `type`: Option[DataTypeRestriction.TypeOrTypes] = None
-) {
-  def types: Option[Vector[DataTypeName]] = {
-    `type`.map {
-      case Left(single) => Vector(single)
-      case Right(many)  => many
-    }
-  }
-}
+    `type`: OValidatingField[DataTypeRestriction.TypeOrTypes, TypesValidator] = None
+)
 
 object DataTypeRestriction {
   type TypeOrTypes = Either[DataTypeName, Vector[DataTypeName]]
@@ -26,14 +19,5 @@ object DataTypeRestriction {
   implicit val typeCodec: Codec[TypeOrTypes] = Codecs.disjunctEitherCodec[DataTypeName, Vector[DataTypeName]]
   implicit val codec: Codec.AsObject[DataTypeRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
 
-  implicit val validationProvider: ValidationProvider[DataTypeRestriction] = ValidationProvider.instance {
-    restriction =>
-      Validator.sequence(
-        restriction.types match {
-          case None => Validator.success
-          case Some(types) =>
-            TypesValidator(types)
-        }
-      )
-  }
+  implicit val validationProvider: ValidationProvider[DataTypeRestriction] = ValidationProvider.visitingSequental
 }

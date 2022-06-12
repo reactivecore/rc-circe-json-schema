@@ -8,23 +8,20 @@ import net.reactivecore.cjs.validator.{ConstValidator, ValidationProvider, Valid
   * Note: custom serialization, as null is a valid value.
   */
 case class ConstRestriction(
-    const: Option[Json] = None
+    const: OValidatingField[Json, ConstValidator] = None
 )
 
 object ConstRestriction {
   implicit val encoder: Encoder.AsObject[ConstRestriction] = Encoder.AsObject {
     case ConstRestriction(None)        => JsonObject()
-    case ConstRestriction(Some(value)) => JsonObject("const" -> value)
+    case ConstRestriction(Some(value)) => JsonObject("const" -> value.value)
   }
 
   implicit val decoder: Decoder[ConstRestriction] = Decoder.decodeJsonObject.map { o =>
-    ConstRestriction(o("const"))
+    ConstRestriction(o("const").map(ValidatingField(_)))
   }
 
   implicit val codec: Codec.AsObject[ConstRestriction] = Codec.AsObject.from(decoder, encoder)
 
-  implicit val validationProvider: ValidationProvider[ConstRestriction] = ValidationProvider.instance {
-    case ConstRestriction(Some(const)) => ConstValidator(const)
-    case ConstRestriction(None)        => Validator.success
-  }
+  implicit val validationProvider = ValidationProvider.visitingSequental[ConstRestriction]
 }
