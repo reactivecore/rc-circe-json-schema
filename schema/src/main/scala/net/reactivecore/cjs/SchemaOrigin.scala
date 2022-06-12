@@ -6,7 +6,8 @@ import net.reactivecore.cjs.validator.Validator
 /** Context which led to this schema */
 case class SchemaOrigin(
     parentId: RefUri,
-    path: JsonPointer
+    path: JsonPointer,
+    metaSchema: Option[Schema]
 ) {
 
   /** Returns the context for entering an Array Object. */

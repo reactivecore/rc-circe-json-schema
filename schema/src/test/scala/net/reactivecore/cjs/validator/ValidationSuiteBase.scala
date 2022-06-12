@@ -8,7 +8,6 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
   behavior of ("Parsing")
 
   val unsupported = Seq(
-    "vocabulary.json"
   )
 
   val tests = ValidationSuite.load(name).filterNot { case (name, _) =>

@@ -27,13 +27,13 @@ sealed trait Schema {
   /**
     * Returns a [[SchemaValidator]] for this Schema.
     *
-    * In contrast to subValdiator, the URI is already given, and the root $id will be ignored.
+    * In contrast to [[validator]], the URI is already given, and the root $id will be ignored.
     */
-  def schemaValidator(id: RefUri): SchemaValidator = {
+  def schemaValidator(id: RefUri, maybeMetaSchema: Option[Schema]): SchemaValidator = {
     this match {
-      case BooleanSchema(value) => BooleanSchemaValidator(SchemaOrigin(id, JsonPointer()), value)
+      case BooleanSchema(value) => BooleanSchemaValidator(SchemaOrigin(id, JsonPointer(), maybeMetaSchema), value)
       case os: ObjectSchema =>
-        ObjectSchema.validatorWithId(id, SchemaOrigin(id, JsonPointer()), os)
+        ObjectSchema.validatorWithId(id, SchemaOrigin(id, JsonPointer(), maybeMetaSchema), os)
     }
   }
 
@@ -92,10 +92,9 @@ object ObjectSchema {
   implicit def codec: Codec.AsObject[ObjectSchema] = Codecs.combineCodecG
 
   implicit val validationProvider: ValidationProvider[ObjectSchema] = ValidationProvider.withOrigin { (origin, os) =>
-    val id = os.location.id
-      .map { id =>
-        origin.parentId.resolve(id)
-      }
+    val id = os.location.`$id`.map { id =>
+      origin.parentId.resolve(id)
+    }
       .getOrElse(origin.parentId)
 
     validatorWithId(id, origin, os)
@@ -125,7 +124,7 @@ object ObjectSchema {
       underlying,
       fragment = os.ref.anchor,
       dynamicFragment = dynamicAnchor,
-      idOverride = os.location.id
+      idOverride = os.location.`$id`
     )
   }
 }

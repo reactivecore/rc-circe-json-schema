@@ -93,12 +93,17 @@ case class DocumentValidator(
 
 object DocumentValidator {
 
-  /** Build Root Valdiator from Resolved data. */
+  /** Build a document validator from resolved state. */
   def build(resolved: Resolved): Either[String, DocumentValidator] = {
     resolved.roots
       .map { case (id, json) =>
-        json.as[Schema].map { schema =>
-          id -> SingleDocumentValidator(schema, schema.schemaValidator(id))
+        for {
+          schema <- json.as[Schema].left.map { failure =>
+            s"Could not decode schema: ${failure}"
+          }
+          maybeMeta <- resolveMetaSchema(schema, resolved)
+        } yield {
+          id -> SingleDocumentValidator(schema, schema.schemaValidator(id, maybeMeta))
         }
       }
       .toVector
@@ -107,6 +112,20 @@ object DocumentValidator {
       case Right(ok) =>
         val asMap = ok.toMap
         Right(DocumentValidator(resolved.main, asMap))
+    }
+  }
+
+  /** Find the meta schema, if given. */
+  private def resolveMetaSchema(schema: Schema, resolved: Resolved): Either[String, Option[ObjectSchema]] = {
+    schema match {
+      case b: BooleanSchema => Right(None)
+      case o: ObjectSchema =>
+        o.location.`$schema`.map { metaSchemaUri =>
+          resolved.roots.get(metaSchemaUri) match {
+            case None       => Left(s"Could not resolve meta schema ${metaSchemaUri}")
+            case Some(json) => json.as[ObjectSchema].left.map { _ => "Could not decode meta schema" }
+          }
+        }.sequence
     }
   }
 

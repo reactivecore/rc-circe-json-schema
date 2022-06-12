@@ -131,17 +131,17 @@ class Resolver[F[_]](downloader: Downloader[F])(
         }
         .getOrElse(state)
 
-      referenceId
-        .map { id => getRaw(depth + 1, id, absoluteReferencedState) }
-        .getOrElse(monad.pure(absoluteReferencedState))
-        .flatMap { referencedIdState =>
-          referencedIdState.effectFold(jsonChildren(json, Resolver.BlacklistParentKey)) { (child, state) =>
-            resolveRoots(depth + 1, state, child, position).map { newState =>
-              () -> newState
-            }
+      for {
+        afterReferenceSchema <- maybeGetRaw(depth + 1, resolvable.`$schema`, absoluteReferencedState)
+        referencedIdState <- maybeGetRaw(depth + 1, referenceId, afterReferenceSchema)
+        result <- referencedIdState.effectFold(jsonChildren(json, Resolver.BlacklistParentKey)) { (child, state) =>
+          resolveRoots(depth + 1, state, child, position).map { newState =>
+            () -> newState
           }
         }
-        .map { _._2 }
+      } yield {
+        result._2
+      }
     }
   }
 
@@ -155,6 +155,14 @@ class Resolver[F[_]](downloader: Downloader[F])(
         reflected <- resolveRoots(depth + 1, updatedState, downloaded, uri)
       } yield reflected
     }
+  }
+
+  private def maybeGetRaw(depth: Int, uri: Option[RefUri], state: ResolvingState): F[ResolvingState] = {
+    uri
+      .map { uri =>
+        getRaw(depth, uri, state)
+      }
+      .getOrElse(monad.pure(state))
   }
 }
 

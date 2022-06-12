@@ -6,7 +6,8 @@ import io.circe.generic.semiauto
 /** A JSON piece with important data for resolving. */
 case class ResolveablePiece(
     `$ref`: Option[RefUri] = None,
-    `$id`: Option[RefUri] = None
+    `$id`: Option[RefUri] = None,
+    `$schema`: Option[RefUri] = None
 )
 
 object ResolveablePiece {
