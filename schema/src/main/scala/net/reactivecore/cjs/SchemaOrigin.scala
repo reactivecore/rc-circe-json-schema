@@ -7,8 +7,10 @@ import net.reactivecore.cjs.validator.Validator
 case class SchemaOrigin(
     parentId: RefUri,
     path: JsonPointer,
-    metaSchema: Option[Schema]
+    metaSchema: Option[ObjectSchema]
 ) {
+
+  lazy val vocabulary: Option[Map[String, Boolean]] = metaSchema.flatMap(_.location.`$vocabulary`)
 
   /** Returns the context for entering an Array Object. */
   def enterObject(name: String): SchemaOrigin = {

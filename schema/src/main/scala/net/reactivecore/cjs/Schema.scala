@@ -29,7 +29,7 @@ sealed trait Schema {
     *
     * In contrast to [[validator]], the URI is already given, and the root $id will be ignored.
     */
-  def schemaValidator(id: RefUri, maybeMetaSchema: Option[Schema]): SchemaValidator = {
+  def schemaValidator(id: RefUri, maybeMetaSchema: Option[ObjectSchema]): SchemaValidator = {
     this match {
       case BooleanSchema(value) => BooleanSchemaValidator(SchemaOrigin(id, JsonPointer(), maybeMetaSchema), value)
       case os: ObjectSchema =>
