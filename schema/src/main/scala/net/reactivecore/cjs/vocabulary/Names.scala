@@ -1,12 +1,6 @@
-package net.reactivecore.cjs
+package net.reactivecore.cjs.vocabulary
 
-import io.circe.Codec
-import net.reactivecore.cjs.resolver.RefUri
-import net.reactivecore.cjs.util.VectorMap
-import net.reactivecore.cjs.validator.ValidationProvider
-
-/** Constant values for vocabularies. */
-object Vocabulary {
+object Names {
   object V2019_12 {
     val core = "https://json-schema.org/draft/2019-09/vocab/core"
     val applicator = "https://json-schema.org/draft/2019-09/vocab/applicator"
@@ -32,33 +26,4 @@ object Vocabulary {
 
   /** Full vocabulary. */
   val all = V2019_12.all ++ V2020_12.all
-}
-
-trait Vocabulary {
-  val name: String
-
-  type Implementation
-
-  def codec(implicit schemaCodec: Codec[Schema]): Codec[Implementation]
-
-  def validationProvider: ValidationProvider[Implementation]
-}
-
-object CoreVocabulary2020 extends Vocabulary {
-  override val name: String = Vocabulary.V2020_12.core
-
-  case class Implementation(
-      `$id`: Option[RefUri] = None,
-      `$schema`: Option[RefUri] = None,
-      `$ref`: Option[RefUri] = None,
-      `$anchor`: Option[String] = None,
-      `dynamicRef`: Option[RefUri] = None,
-      `$vocabulary`: Option[Map[String, Boolean]] = None,
-      `$comment`: Option[String] = None,
-      `$defs`: Option[VectorMap[String, Schema]] = None
-  )
-
-  override def codec: Codec[Implementation] = ???
-
-  override def validationProvider: ValidationProvider[Implementation] = ???
 }
