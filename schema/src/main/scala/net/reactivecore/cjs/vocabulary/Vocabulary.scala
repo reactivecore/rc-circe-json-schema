@@ -1,19 +1,17 @@
 package net.reactivecore.cjs.vocabulary
 
 import io.circe.Codec
-import io.circe.generic.semiauto
-import net.reactivecore.cjs.Schema
-import net.reactivecore.cjs.resolver.RefUri
-import net.reactivecore.cjs.util.{Codecs, VectorMap}
-import net.reactivecore.cjs.validator.ValidationProvider
 
-/** A single vocabulary. */
-trait Vocabulary {
-  val name: String
+/** A vocabulary contains parts */
+case class Vocabulary(
+    parts: Vector[VocabularyPart]
+) {
+  def schemaCodec: Codec[Schema] = ???
+}
 
-  type Implementation
+object Vocabulary {
 
-  def codec(implicit schemaCodec: Codec[Schema]): Codec[Implementation]
-
-  def validationProvider: ValidationProvider[Implementation]
+  def default2020: Vocabulary = Vocabulary(
+    Vector(CoreVocabulary2020)
+  )
 }
