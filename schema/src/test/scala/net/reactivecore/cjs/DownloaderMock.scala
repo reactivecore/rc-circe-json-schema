@@ -1,7 +1,7 @@
 package net.reactivecore.cjs
 
 import io.circe.Json
-import net.reactivecore.cjs.resolver.{Downloader, ResolveError, SimpleResolveResult}
+import net.reactivecore.cjs.resolver.Downloader
 import org.apache.commons.io.FileUtils
 
 import java.io.{File, FileNotFoundException}
@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 import scala.util.Try
 
 /** Fakes a downloader with test files */
-class DownloaderMock extends Downloader[SimpleResolveResult] {
+class DownloaderMock extends Downloader[Result] {
 
   val directories = Seq(
     "https://json-schema.org/draft/2020-12" -> "3rdparty/schema/2020-12",
@@ -17,23 +17,23 @@ class DownloaderMock extends Downloader[SimpleResolveResult] {
     "http://localhost:1234" -> "3rdparty/JSON-Schema-Test-Suite/remotes"
   )
 
-  override def loadJson(url: String): SimpleResolveResult[Json] = {
+  override def loadJson(url: String): Result[Json] = {
     for {
       location <- directories
         .collectFirst {
           case (prefix, path) if url.startsWith(prefix) => path + url.stripPrefix(prefix)
         }
-        .toRight(ResolveError(s"File ${url} not found"))
+        .toRight(ResolveFailure(s"File ${url} not found"))
       content <- Try(
         FileUtils.readFileToString(new File(DownloaderMock.baseDir, location), StandardCharsets.UTF_8)
       ).toEither.left
         .map { error =>
-          ResolveError(error.getMessage)
+          ResolveFailure(error.getMessage)
         }
       json <- io.circe.parser
         .parse(content)
         .left
-        .map(err => ResolveError(s"Invalid JSON on ${url}: ${err.getMessage()}"))
+        .map(err => ResolveFailure(s"Invalid JSON on ${url}: ${err.getMessage()}"))
     } yield json
   }
 }

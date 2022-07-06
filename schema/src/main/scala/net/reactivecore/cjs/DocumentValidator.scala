@@ -4,7 +4,7 @@ import cats.MonadError
 import cats.implicits._
 import io.circe.Json
 import net.reactivecore.cjs.Schema.parse
-import net.reactivecore.cjs.resolver.{Downloader, JsonPointer, RefUri, ResolveError, Resolved, Resolver}
+import net.reactivecore.cjs.resolver.{Downloader, JsonPointer, RefUri, Resolved, Resolver}
 import net.reactivecore.cjs.validator.{ValidationContext, ValidationResult, ValidationState, Validator, Violation}
 
 /** Validator for a full resolved schema document. */
@@ -12,7 +12,10 @@ case class DocumentValidator(
     mainId: RefUri,
     roots: Map[RefUri, SingleDocumentValidator]
 ) {
-  private val mainRoot = roots(mainId)
+  private val mainRoot: SingleDocumentValidator = roots(mainId)
+
+  /** Returns the manin schema */
+  def mainSchema: Schema = mainRoot.schema
 
   /** Validate JSON against the Schema. */
   def validate(json: Json): ValidationResult = {
@@ -94,7 +97,7 @@ case class DocumentValidator(
 object DocumentValidator {
 
   /** Build Root Valdiator from Resolved data. */
-  def build(resolved: Resolved): Either[String, DocumentValidator] = {
+  def build(resolved: Resolved): Either[Failure, DocumentValidator] = {
     resolved.roots
       .map { case (id, json) =>
         json.as[Schema].map { schema =>
@@ -103,7 +106,7 @@ object DocumentValidator {
       }
       .toVector
       .sequence match {
-      case Left(error) => Left(s"Decoding Error: ${error}")
+      case Left(error) => Left(JsonFailure(error))
       case Right(ok) =>
         val asMap = ok.toMap
         Right(DocumentValidator(resolved.main, asMap))
@@ -114,9 +117,9 @@ object DocumentValidator {
   def parseAndResolveJson[F[_]](
       schemaJson: String,
       downloader: Downloader[F]
-  )(implicit applicativeError: MonadError[F, ResolveError]): F[DocumentValidator] = {
+  )(implicit applicativeError: MonadError[F, Failure]): F[DocumentValidator] = {
     parse(schemaJson) match {
-      case Left(err)     => applicativeError.raiseError(ResolveError(s"Parsing error: ${err.getMessage}"))
+      case Left(err)     => applicativeError.raiseError(ResolveFailure(s"Parsing error: ${err.getMessage}"))
       case Right(schema) => schema.resolve(downloader)
     }
   }
@@ -125,17 +128,12 @@ object DocumentValidator {
   def parseAndResolveFromUrl[F[_]](
       url: String,
       downloader: Downloader[F]
-  )(implicit applicativeError: MonadError[F, ResolveError]): F[DocumentValidator] = {
+  )(implicit applicativeError: MonadError[F, Failure]): F[DocumentValidator] = {
     val resolver = new Resolver(downloader)
     for {
       base <- downloader.loadJson(url)
       resolved <- resolver.resolve(base)
-      validator <- DocumentValidator
-        .build(resolved)
-        .fold(
-          err => applicativeError.raiseError(ResolveError(err)),
-          ok => applicativeError.pure(ok)
-        )
+      validator <- applicativeError.fromEither(DocumentValidator.build(resolved))
     } yield validator
   }
 }

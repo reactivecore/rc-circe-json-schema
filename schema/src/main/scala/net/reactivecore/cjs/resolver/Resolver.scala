@@ -3,6 +3,7 @@ package net.reactivecore.cjs.resolver
 import cats.implicits._
 import cats.{Monad, MonadError}
 import io.circe.{Json, JsonObject}
+import net.reactivecore.cjs.{Failure, ResolveFailure}
 
 import scala.language.higherKinds
 
@@ -44,7 +45,7 @@ case class ResolvingState(
 
 /** Resolves references within JSON. */
 class Resolver[F[_]](downloader: Downloader[F])(
-    implicit monad: MonadError[F, ResolveError]
+    implicit monad: MonadError[F, Failure]
 ) {
 
   def resolve(json: Json): F[Resolved] = {
