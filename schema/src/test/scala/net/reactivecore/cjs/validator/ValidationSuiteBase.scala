@@ -1,5 +1,6 @@
 package net.reactivecore.cjs.validator
 
+import io.circe.Json
 import net.reactivecore.cjs.{DownloaderMock, Loader, Schema, TestBase}
 import io.circe.syntax._
 
@@ -8,6 +9,7 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
   behavior of ("Parsing")
 
   val unsupported = Seq(
+    "unknownKeyword.json", // TODO
     "vocabulary.json"
   )
 
@@ -52,6 +54,10 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
                  |${schemaTest.schema}
                  |
                  |Test:       ${singleTest.description} ${testIdx + 1}/${schemaTest.tests.size}
+                 |Used Schema:
+                 |
+                 |${validator.mainSchema.asJson}
+                 |
                  |Schema:      ${validator.mainSchema.description.description} (${schemaIdx + 1} / ${suite.size})
                  |SchemaTest:  ${schemaTest.description}
                  |

@@ -3,7 +3,7 @@ package net.reactivecore.cjs
 import cats.MonadError
 import cats.implicits._
 import io.circe.Json
-import net.reactivecore.cjs.resolver.{Downloader, Resolver}
+import net.reactivecore.cjs.resolver.{Downloader, Resolved, Resolver}
 
 import scala.language.higherKinds
 
@@ -27,9 +27,23 @@ class Loader[F[_]](downloader: Downloader[F])(
     val resolver = new Resolver(downloader)
     for {
       resolved <- resolver.resolve(json)
-      documentValidator <- monad.fromEither(DocumentValidator.build(resolved))
+      vocabulary <- monad.fromEither(determineVocabulary(resolved))
+      resolvedAfterVocabulary = filterWithVocabulary(resolved, vocabulary)
+      documentValidator <- monad.fromEither(DocumentValidator.build(resolvedAfterVocabulary))
     } yield {
       documentValidator
     }
+  }
+
+  private def determineVocabulary(resolved: Resolved): Result[Vocabulary] = {
+    // TODO TODO TODO!
+    Right(Vocabulary(Vocabulary.v2020.all))
+  }
+
+  /** Filter resolved JSON using a vocabulary */
+  private def filterWithVocabulary(resolved: Resolved, vocabulary: Vocabulary): Resolved = {
+    resolved.copy(
+      roots = resolved.roots.mapValues(vocabulary.filter).view.toMap
+    )
   }
 }
