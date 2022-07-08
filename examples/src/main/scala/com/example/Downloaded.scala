@@ -1,7 +1,7 @@
 package com.example
 
-import net.reactivecore.cjs.DocumentValidator
-import net.reactivecore.cjs.resolver.{Downloader, SimpleResolveResult}
+import net.reactivecore.cjs.{DocumentValidator, Result}
+import net.reactivecore.cjs.resolver.Downloader
 import cats.implicits._
 import io.circe.Json
 
@@ -13,7 +13,7 @@ object Downloaded extends App {
 
   // Overriding to see what is downloaded.
   val downloader = new Downloader.JavaUrlDownloader {
-    override def loadJson(url: String): SimpleResolveResult[Json] = {
+    override def loadJson(url: String): Result[Json] = {
       println(s"Downloading ${url}...")
       val result = super.loadJson(url)
       result

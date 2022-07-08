@@ -43,7 +43,7 @@ sealed trait Schema {
   /** Resolves this schema with all referenced Schemas. */
   def resolve[F[_]](
       downloader: Downloader[F]
-  )(implicit applicativeError: MonadError[F, ResolveError]): F[DocumentValidator] = {
+  )(implicit applicativeError: MonadError[F, Failure]): F[DocumentValidator] = {
     val resolver = new Resolver(downloader)
     val json = Schema.codec.apply(this)
 
@@ -51,7 +51,7 @@ sealed trait Schema {
       resolvedJson <- resolver.resolve(json)
       built <- DocumentValidator.build(resolvedJson) match {
         case Left(err) =>
-          applicativeError.raiseError(ResolveError(s"Could not parse resolved json: ${err}"))
+          applicativeError.raiseError(ResolveFailure(s"Could not parse resolved json: ${err}"))
         case Right(ok) => applicativeError.pure(ok)
       }
     } yield {
@@ -60,8 +60,8 @@ sealed trait Schema {
   }
 
   /** Try to resolve the schema into a validator without downloading anything */
-  def emptyResolve: Either[String, DocumentValidator] = {
-    resolve(Downloader.emptySimple).left.map(_.message)
+  def emptyResolve: Result[DocumentValidator] = {
+    resolve(Downloader.emptySimple)
   }
 }
 
