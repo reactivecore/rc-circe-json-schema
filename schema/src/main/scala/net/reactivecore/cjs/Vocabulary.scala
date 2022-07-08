@@ -2,6 +2,9 @@ package net.reactivecore.cjs
 
 import io.circe.Json
 
+/** Defines a vocabulary and builds a JSON Filter on top of it.
+  * For default vocabularies look into [[Vocabularies]]
+  */
 case class Vocabulary(
     parts: Seq[Vocabulary.VocabularyPart]
 ) {
@@ -62,113 +65,5 @@ object Vocabulary {
   object VocabularyPart {
     def sameKind(name: String, kind: KeywordKind, keywords: String*): VocabularyPart =
       VocabularyPart(name, keywords.map { k => k -> kind }.toMap)
-  }
-
-  object v2020 {
-    val core = VocabularyPart(
-      "https://json-schema.org/draft/2020-12/vocab/core",
-      Map(
-        "$id" -> Full,
-        "$schema" -> Full,
-        "$ref" -> Full,
-        "$anchor" -> Full,
-        "$dynamicRef" -> Full,
-        "$dynamicAnchor" -> Full,
-        "$vocabulary" -> Full,
-        "$comment" -> Full,
-        "$defs" -> Values
-      )
-    )
-
-    val applicator = VocabularyPart(
-      "https://json-schema.org/draft/2020-12/vocab/applicator",
-      Map(
-        "prefixItems" -> Single,
-        "items" -> Single,
-        "contains" -> Single,
-        "additionalProperties" -> Single,
-        "properties" -> Values,
-        "patternProperties" -> Values,
-        "dependentSchemas" -> Values,
-        "propertyNames" -> Full,
-        "if" -> Single,
-        "then" -> Single,
-        "else" -> Single,
-        "allOf" -> Single,
-        "anyOf" -> Single,
-        "oneOf" -> Single,
-        "not" -> Single
-      )
-    )
-
-    val unevaluated = VocabularyPart.sameKind(
-      "https://json-schema.org/draft/2020-12/vocab/unevaluated",
-      Single,
-      "unevaluatedItems",
-      "unevaluatedProperties"
-    )
-
-    val validation = VocabularyPart.sameKind(
-      "https://json-schema.org/draft/2020-12/vocab/validation",
-      Full,
-      "type",
-      "const",
-      "enum",
-      "multipleOf",
-      "maximum",
-      "exclusiveMaximum",
-      "minimum",
-      "exclusiveMinimum",
-      "maxLength",
-      "minLength",
-      "pattern",
-      "maxItems",
-      "minItems",
-      "uniqueItems",
-      "maxContains",
-      "minContains",
-      "maxProperties",
-      "minProperties",
-      "required",
-      "dependentRequired"
-    )
-
-    val metaData = VocabularyPart.sameKind(
-      "https://json-schema.org/draft/2020-12/vocab/meta-data",
-      Full,
-      "title",
-      "description",
-      "default",
-      "deprecated",
-      "readOnly",
-      "writeOnly",
-      "examples"
-    )
-
-    val formatAnnotation = VocabularyPart.sameKind(
-      "https://json-schema.org/draft/2020-12/vocab/format-annotation",
-      Full,
-      "format"
-    )
-
-    val content = VocabularyPart(
-      "https://json-schema.org/draft/2020-12/vocab/content",
-      Map(
-        "contentEncoding" -> Full,
-        "contentMediaType" -> Full,
-        "contentSchema" -> Single
-      )
-    )
-
-    /** All Parts of v2020 */
-    val all = Seq(
-      core,
-      applicator,
-      unevaluated,
-      validation,
-      metaData,
-      formatAnnotation,
-      content
-    )
   }
 }

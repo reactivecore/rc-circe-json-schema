@@ -1,10 +1,10 @@
 package net.reactivecore.cjs.validator
 
 import io.circe.Json
-import net.reactivecore.cjs.{DownloaderMock, Loader, Schema, TestBase}
+import net.reactivecore.cjs.{DownloaderMock, Loader, Schema, TestBase, Vocabulary}
 import io.circe.syntax._
 
-abstract class ValidationSuiteBase(name: String) extends TestBase {
+abstract class ValidationSuiteBase(name: String, defaultVocabulary: Vocabulary) extends TestBase {
 
   behavior of ("Parsing")
 
@@ -32,14 +32,14 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
     it should s"resolve all in ${name}" in {
       suite.foreach { schemaTest =>
         withClue(s"in schema ${schemaTest.description}") {
-          new Loader(new DownloaderMock).fromJson(schemaTest.schema).forceRight
+          new Loader(new DownloaderMock, defaultVocabulary).fromJson(schemaTest.schema).forceRight
         }
       }
     }
 
     it should s"validate correctly ${name}" in {
       suite.zipWithIndex.foreach { case (schemaTest, schemaIdx) =>
-        val validator = new Loader(new DownloaderMock).fromJson(schemaTest.schema).forceRight
+        val validator = new Loader(new DownloaderMock, defaultVocabulary).fromJson(schemaTest.schema).forceRight
         schemaTest.tests.zipWithIndex.foreach { case (singleTest, testIdx) =>
           val violations = validator.validate(singleTest.data)
           val isOk = violations.isSuccess == singleTest.valid

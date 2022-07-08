@@ -8,7 +8,10 @@ import net.reactivecore.cjs.resolver.{Downloader, Resolved, Resolver}
 import scala.language.higherKinds
 
 /** Combines the different steps to build a SchemaValidator from JSON */
-class Loader[F[_]](downloader: Downloader[F])(
+class Loader[F[_]](
+    downloader: Downloader[F],
+    defaultVocabulary: Vocabulary = Vocabularies.vocabulary2020
+)(
     implicit monad: MonadError[F, Failure]
 ) {
 
@@ -37,7 +40,7 @@ class Loader[F[_]](downloader: Downloader[F])(
 
   private def determineVocabulary(resolved: Resolved): Result[Vocabulary] = {
     // TODO TODO TODO!
-    Right(Vocabulary(Vocabulary.v2020.all))
+    Right(defaultVocabulary)
   }
 
   /** Filter resolved JSON using a vocabulary */
