@@ -3,12 +3,6 @@ package net.reactivecore.cjs
 object Vocabularies {
   import Vocabulary._
 
-  /** Returns the Vocabulary of Schema 2020_12. */
-  def vocabulary2020 = Vocabulary(Vocabularies.v2020.all)
-
-  /** Returns the Vocabulary of Schema 2019_09 */
-  def vocabulary2019 = Vocabulary(Vocabularies.v2019.all)
-
   object v2020 {
     val core = VocabularyPart(
       "https://json-schema.org/draft/2020-12/vocab/core",
@@ -117,6 +111,12 @@ object Vocabularies {
     )
   }
 
+  /** Vocabulary of Schema 2020_12. */
+  val vocabulary2020 = Vocabulary(
+    "https://json-schema.org/draft/2020-12/schema",
+    Vocabularies.v2020.all
+  )
+
   object v2019 {
     val core = VocabularyPart(
       "https://json-schema.org/draft/2019-09/vocab/core",
@@ -218,4 +218,21 @@ object Vocabularies {
       content
     )
   }
+
+  /** Vocabulary of Schema 2019_09 */
+  val vocabulary2019 = Vocabulary(
+    "https://json-schema.org/draft/2019-09/schema",
+    Vocabularies.v2019.all
+  )
+
+  /** Known vocabularies */
+  val vocabularies: Seq[Vocabulary] = Seq(
+    vocabulary2019,
+    vocabulary2020
+  )
+
+  lazy val knownParts: Map[String, VocabularyPart] = (for {
+    vocabulary <- vocabularies
+    part <- vocabulary.parts
+  } yield (part.name -> part)).toMap
 }

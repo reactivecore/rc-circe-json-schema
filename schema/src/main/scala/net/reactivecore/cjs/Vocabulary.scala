@@ -2,10 +2,14 @@ package net.reactivecore.cjs
 
 import io.circe.Json
 
-/** Defines a vocabulary and builds a JSON Filter on top of it.
+/**
+  * Defines a vocabulary and builds a JSON Filter on top of it.
   * For default vocabularies look into [[Vocabularies]]
+  *
+  * @param schemaId id of the schema defining this vocabulary
   */
 case class Vocabulary(
+    schemaId: String,
     parts: Seq[Vocabulary.VocabularyPart]
 ) {
   private lazy val keywords = parts.flatMap(_.keywords).toMap
