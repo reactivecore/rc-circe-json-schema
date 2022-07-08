@@ -9,7 +9,6 @@ abstract class ValidationSuiteBase(name: String, defaultVocabulary: Vocabulary) 
   behavior of ("Parsing")
 
   val unsupported = Seq(
-    "unknownKeyword.json" // TODO
   )
 
   val tests = ValidationSuite.load(name).filterNot { case (name, _) =>

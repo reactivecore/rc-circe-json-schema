@@ -43,8 +43,11 @@ case class ResolvingState(
   }
 }
 
-/** Resolves references within JSON. */
-class Resolver[F[_]](downloader: Downloader[F])(
+/** Resolves references within JSON.
+  * @param downloader the downloader
+  * @param jsonFilter the filter to be applied after downloading a Schema (for Vocabularies)
+  */
+class Resolver[F[_]](downloader: Downloader[F], jsonFilter: Option[Json => Json] = None)(
     implicit monad: MonadError[F, Failure]
 ) {
 
@@ -152,8 +155,9 @@ class Resolver[F[_]](downloader: Downloader[F])(
     } else {
       for {
         downloaded <- downloader.loadJson(uri.toString)
-        updatedState = state.withSchemaRoot(uri, downloaded)
-        reflected <- resolveRoots(depth + 1, updatedState, downloaded, uri)
+        filtered = jsonFilter.fold(downloaded)(_.apply(downloaded))
+        updatedState = state.withSchemaRoot(uri, filtered)
+        reflected <- resolveRoots(depth + 1, updatedState, filtered, uri)
       } yield reflected
     }
   }

@@ -16,7 +16,6 @@ class Loader[F[_]](
 )(
     implicit monad: MonadError[F, Failure]
 ) {
-  private val resolver = new Resolver(downloader)
 
   /** Load and resolve a JSON Schema from an URL and build a DocumentValidator. */
   def fromUrl(url: String): F[DocumentValidator] = {
@@ -32,7 +31,9 @@ class Loader[F[_]](
   def fromJson(json: Json): F[DocumentValidator] = {
     for {
       vocabulary <- determineVocabulary(json)
-      resolved <- resolver.resolve(json)
+      appliedVocabulary = vocabulary.filter(json)
+      resolver = new Resolver(downloader, Some(vocabulary.filter))
+      resolved <- resolver.resolve(appliedVocabulary)
       resolvedAfterVocabulary = filterWithVocabulary(resolved, vocabulary)
       documentValidator <- monad.fromEither(DocumentValidator.build(resolvedAfterVocabulary))
     } yield {
