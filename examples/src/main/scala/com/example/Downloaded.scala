@@ -1,6 +1,6 @@
 package com.example
 
-import net.reactivecore.cjs.{DocumentValidator, Result}
+import net.reactivecore.cjs.{DocumentValidator, Loader, Result}
 import net.reactivecore.cjs.resolver.Downloader
 import cats.implicits._
 import io.circe.Json
@@ -20,7 +20,7 @@ object Downloaded extends App {
     }
   }
 
-  val validator = DocumentValidator.parseAndResolveFromUrl(jsonSchemaUrl, downloader).right.get
+  val validator = Loader.loadUrl(jsonSchemaUrl, downloader).right.get
 
   def test(s: Json): Unit = {
     val result = validator.validate(s)

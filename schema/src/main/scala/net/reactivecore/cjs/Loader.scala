@@ -101,3 +101,15 @@ class Loader[F[_]](
     )
   }
 }
+
+object Loader {
+
+  /** Load and resolve a JSON Schema from an URL and build a DocumentValidator. */
+  def loadUrl[F[_]](
+      url: String,
+      downloader: Downloader[F],
+      defaultVocabulary: Vocabulary = Vocabularies.vocabulary2020
+  )(implicit monadError: MonadError[F, Failure]): F[DocumentValidator] = {
+    new Loader(downloader, defaultVocabulary).fromUrl(url)
+  }
+}

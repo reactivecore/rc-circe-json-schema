@@ -123,17 +123,4 @@ object DocumentValidator {
       case Right(schema) => schema.resolve(downloader)
     }
   }
-
-  /** Convenience Method for loading and parsing a Schema from URL. */
-  def parseAndResolveFromUrl[F[_]](
-      url: String,
-      downloader: Downloader[F]
-  )(implicit applicativeError: MonadError[F, Failure]): F[DocumentValidator] = {
-    val resolver = new Resolver(downloader)
-    for {
-      base <- downloader.loadJson(url)
-      resolved <- resolver.resolve(base)
-      validator <- applicativeError.fromEither(DocumentValidator.build(resolved))
-    } yield validator
-  }
 }
