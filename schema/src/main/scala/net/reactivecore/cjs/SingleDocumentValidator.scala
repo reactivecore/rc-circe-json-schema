@@ -9,14 +9,9 @@ import scala.collection.mutable
 /** Validator for a single document within [[DocumentValidator]] */
 case class SingleDocumentValidator(
     schema: Schema,
-    validator: Validator
+    validator: SchemaValidator
 ) {
-  val fragments: Map[String, Validator] = {
-    collectFragments {
-      case v: SchemaValidator => v.fragment
-      case _                  => None
-    }
-  }
+  val fragments: Map[String, Validator] = collectFragments()
 
   val dynamicFragments: Map[String, Validator] = {
     val collector = mutable.Map[String, Validator]()
@@ -64,14 +59,21 @@ case class SingleDocumentValidator(
     }
   }
 
-  private def collectFragments(f: Validator => Option[String]): Map[String, Validator] = {
+  private def collectFragments(): Map[String, Validator] = {
     val collector = Seq.newBuilder[(String, Validator)]
-    validator.deepForeach { validator =>
-      f(validator) match {
-        case Some(given) => collector += given -> validator
-        case None        => // nothing
+
+    /* Traverse sub validators as long as they do not have their own id. */
+    def handle(validator: Validator, first: Boolean): Unit = {
+      validator match {
+        case s: SchemaValidator if first || s.idOverride.isEmpty =>
+          s.fragment.foreach { fragment =>
+            collector += (fragment -> s)
+          }
+          s.children.foreach(handle(_, first = false))
+        case _ => validator.children.foreach(handle(_, first = false))
       }
     }
+    handle(validator, first = true)
     collector.result().toMap
   }
 }
