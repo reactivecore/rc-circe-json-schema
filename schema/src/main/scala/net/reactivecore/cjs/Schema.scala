@@ -1,18 +1,10 @@
 package net.reactivecore.cjs
 
-import cats.MonadError
-import cats.implicits._
 import io.circe.Codec
 import net.reactivecore.cjs.resolver._
 import net.reactivecore.cjs.restriction.Restriction
 import net.reactivecore.cjs.util.Codecs
-import net.reactivecore.cjs.validator.{
-  BooleanSchemaValidator,
-  ObjectSchemaValidator,
-  SchemaValidator,
-  ValidationProvider,
-  Validator
-}
+import net.reactivecore.cjs.validator._
 
 import scala.language.higherKinds
 
@@ -39,30 +31,6 @@ sealed trait Schema {
 
   /** Returns a Description for this Schema. */
   def description: Description
-
-  /** Resolves this schema with all referenced Schemas. */
-  def resolve[F[_]](
-      downloader: Downloader[F]
-  )(implicit applicativeError: MonadError[F, ResolveError]): F[DocumentValidator] = {
-    val resolver = new Resolver(downloader)
-    val json = Schema.codec.apply(this)
-
-    for {
-      resolvedJson <- resolver.resolve(json)
-      built <- DocumentValidator.build(resolvedJson) match {
-        case Left(err) =>
-          applicativeError.raiseError(ResolveError(s"Could not parse resolved json: ${err}"))
-        case Right(ok) => applicativeError.pure(ok)
-      }
-    } yield {
-      built
-    }
-  }
-
-  /** Try to resolve the schema into a validator without downloading anything */
-  def emptyResolve: Either[String, DocumentValidator] = {
-    resolve(Downloader.emptySimple).left.map(_.message)
-  }
 }
 
 /** A Schema which directly evaluates into true or false */

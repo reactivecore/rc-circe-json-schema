@@ -4,6 +4,8 @@ import io.circe.Json
 import io.circe.syntax._
 import net.reactivecore.cjs.TestBase
 
+import java.net.URI
+
 class RefUriSpec extends TestBase {
   "empty" should "work" in {
     RefUri().toString shouldBe ""
@@ -45,5 +47,20 @@ class RefUriSpec extends TestBase {
     val sample = RefUri.fromString("http://localhost/abdd").forceRight
     sample.asJson shouldBe Json.fromString(sample.toString)
     sample.asJson.as[RefUri] shouldBe Right(sample)
+  }
+
+  "urns" should "be handled" in {
+    val urn = "urn:uuid:deadbeef-1234-00ff-ff00-4321feebdaed"
+    val ref = RefUri.forceString(urn)
+    ref.toUri shouldBe new URI(urn)
+    val subResolved = ref.resolve(RefUri.forceString("#/$defs/bar"))
+    subResolved.toString shouldBe (urn + "#/$defs/bar")
+  }
+
+  it should "shouldBe supported with fragments" in {
+    val urn = "urn:uuid:deadbeef-1234-00ff-ff00-4321feebdaed#/foo/bar"
+    val ref = RefUri.forceString(urn)
+    ref.toUri shouldBe new URI(urn)
+    ref.toString shouldBe urn
   }
 }

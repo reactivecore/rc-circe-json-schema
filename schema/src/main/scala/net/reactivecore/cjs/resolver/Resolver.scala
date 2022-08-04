@@ -3,6 +3,7 @@ package net.reactivecore.cjs.resolver
 import cats.implicits._
 import cats.{Monad, MonadError}
 import io.circe.{Json, JsonObject}
+import net.reactivecore.cjs.{Failure, ResolveFailure}
 
 import scala.language.higherKinds
 
@@ -42,9 +43,12 @@ case class ResolvingState(
   }
 }
 
-/** Resolves references within JSON. */
-class Resolver[F[_]](downloader: Downloader[F])(
-    implicit monad: MonadError[F, ResolveError]
+/** Resolves references within JSON.
+  * @param downloader the downloader
+  * @param jsonFilter the filter to be applied after downloading a Schema (for Vocabularies)
+  */
+class Resolver[F[_]](downloader: Downloader[F], jsonFilter: Option[Json => Json] = None)(
+    implicit monad: MonadError[F, Failure]
 ) {
 
   def resolve(json: Json): F[Resolved] = {
@@ -115,7 +119,7 @@ class Resolver[F[_]](downloader: Downloader[F])(
       val position = subId.getOrElse(parentId)
 
       val reference = resolvable.`$ref`.map { ref =>
-        subId.getOrElse(parentId).resolve(ref)
+        position.resolve(ref)
       }
 
       val absoluteId = subId.map(_.copy(fragment = None))
@@ -151,8 +155,9 @@ class Resolver[F[_]](downloader: Downloader[F])(
     } else {
       for {
         downloaded <- downloader.loadJson(uri.toString)
-        updatedState = state.withSchemaRoot(uri, downloaded)
-        reflected <- resolveRoots(depth + 1, updatedState, downloaded, uri)
+        filtered = jsonFilter.fold(downloaded)(_.apply(downloaded))
+        updatedState = state.withSchemaRoot(uri, filtered)
+        reflected <- resolveRoots(depth + 1, updatedState, filtered, uri)
       } yield reflected
     }
   }

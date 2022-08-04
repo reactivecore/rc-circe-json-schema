@@ -29,7 +29,7 @@ object LogicRestrictions {
         logicChain(context.enterObject("allOf"), restrictions.allOf, x => AllOfValidator(x.toVector)),
         restrictions.not
           .map { schema =>
-            NotValidator(schema.validator(context))
+            NotValidator(schema.validator(context.enterObject("not")))
           }
           .getOrElse(Validator.success),
         ifThenElse(context, restrictions)
@@ -50,9 +50,9 @@ object LogicRestrictions {
     val got = for {
       i <- logicRestrictions.`if`
     } yield {
-      val ic = i.validator(origin)
-      val t = logicRestrictions.`then`.map(_.validator(origin))
-      val e = logicRestrictions.`else`.map(_.validator(origin))
+      val ic = i.validator(origin.enterObject("if"))
+      val t = logicRestrictions.`then`.map(_.validator(origin.enterObject("then")))
+      val e = logicRestrictions.`else`.map(_.validator(origin.enterObject("else")))
       IfThenElseValidator(ic, t, e)
     }
     got.getOrElse(Validator.success)

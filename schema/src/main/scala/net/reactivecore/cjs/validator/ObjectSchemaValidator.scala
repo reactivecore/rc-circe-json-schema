@@ -9,7 +9,7 @@ case class ObjectSchemaValidator(
     underlying: Validator,
     override val fragment: Option[String],
     override val dynamicFragment: Option[String],
-    idOverride: Option[RefUri]
+    override val idOverride: Option[RefUri]
 ) extends SchemaValidator {
   override def children: Vector[Validator] = Vector(underlying)
 

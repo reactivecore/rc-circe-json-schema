@@ -43,6 +43,7 @@ There are some main Types
 - `ValidationResult` the result of a validation, contains possible violations.
 - `DocumentValidator` a validator for a full set of JSON-Schema-Documents. This is what you want to use for Validating
 - `SingleDocumentValidator` representing a single document within `DocumentValidator`
+- `Loader` the main entry point to load and parse JSON-Schemas, which provide a DocumentValidator for you.
 - `Downloader` during resolving, it is possible, that additional URLs need to be downloaded.
   The downloader is responsible for that and you can bring your own. There exists a dummy implementation
   which doesn't download anything `Downloader.emptySimple` and an implementation which is using Java-URL-Facilities `Downloader.JavaUrlDownloader`

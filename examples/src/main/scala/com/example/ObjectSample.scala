@@ -1,7 +1,8 @@
 package com.example
 
 import io.circe.Json
-import net.reactivecore.cjs.Schema
+import net.reactivecore.cjs.resolver.Downloader
+import net.reactivecore.cjs.{Loader, Schema}
 
 object ObjectSample extends App {
   val schemaCode =
@@ -29,9 +30,7 @@ object ObjectSample extends App {
       |}
       |""".stripMargin
 
-  val schema = Schema.parse(schemaCode).right.get
-
-  val validator = schema.emptyResolve.right.get
+  val validator = Loader.empty.fromJson(schemaCode).right.get
 
   def test(s: Json): Unit = {
     val result = validator.validate(s)

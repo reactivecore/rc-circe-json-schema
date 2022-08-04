@@ -2,7 +2,7 @@ package net.reactivecore.cjs.validator
 
 import io.circe.Json
 import net.reactivecore.cjs.SchemaOrigin
-import net.reactivecore.cjs.resolver.JsonPointer
+import net.reactivecore.cjs.resolver.{JsonPointer, RefUri}
 
 import scala.collection.mutable
 
@@ -34,12 +34,6 @@ trait Validator {
   /** Children Validators */
   def children: Vector[Validator] = Vector.empty
 
-  /** Traverses the Validator tree */
-  def deepForeach(f: Validator => Unit): Unit = {
-    f(this)
-    children.foreach(_.deepForeach(f))
-  }
-
   /** Depth first foreach. */
   def wideForeach(f: Validator => Unit): Unit = {
     val wait = mutable.Queue[Validator]()
@@ -67,6 +61,9 @@ trait SchemaValidator extends Validator {
 
   /** Dynamic Fragment (dynamic anchor) of this validator */
   def dynamicFragment: Option[String] = None
+
+  /** This schema defines it's own id. */
+  def idOverride: Option[RefUri] = None
 }
 
 trait ContextFreeValidator extends Validator {

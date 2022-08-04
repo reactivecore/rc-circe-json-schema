@@ -1,14 +1,14 @@
 package net.reactivecore.cjs.validator
 
-import net.reactivecore.cjs.{DownloaderMock, Schema, TestBase}
+import io.circe.Json
+import net.reactivecore.cjs.{DownloaderMock, Loader, Schema, TestBase, Vocabulary}
 import io.circe.syntax._
 
-abstract class ValidationSuiteBase(name: String) extends TestBase {
+abstract class ValidationSuiteBase(name: String, defaultVocabulary: Vocabulary) extends TestBase {
 
   behavior of ("Parsing")
 
   val unsupported = Seq(
-    "vocabulary.json"
   )
 
   val tests = ValidationSuite.load(name).filterNot { case (name, _) =>
@@ -29,21 +29,15 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
 
     it should s"resolve all in ${name}" in {
       suite.foreach { schemaTest =>
-        val schema = schemaTest.schema.as[Schema].forceRight
         withClue(s"in schema ${schemaTest.description}") {
-          schema.resolve(new DownloaderMock).forceRight
+          new Loader(new DownloaderMock, defaultVocabulary).fromJson(schemaTest.schema).forceRight
         }
       }
     }
 
     it should s"validate correctly ${name}" in {
       suite.zipWithIndex.foreach { case (schemaTest, schemaIdx) =>
-        val schema = schemaTest.schema.as[Schema] match {
-          case Left(error) =>
-            fail(s"${error} in ${schemaTest.schema}")
-          case Right(ok) => ok
-        }
-        val validator = schema.resolve(new DownloaderMock).forceRight
+        val validator = new Loader(new DownloaderMock, defaultVocabulary).fromJson(schemaTest.schema).forceRight
         schemaTest.tests.zipWithIndex.foreach { case (singleTest, testIdx) =>
           val violations = validator.validate(singleTest.data)
           val isOk = violations.isSuccess == singleTest.valid
@@ -55,10 +49,14 @@ abstract class ValidationSuiteBase(name: String) extends TestBase {
               s"""
                  |Validating ${singleTest.data} using schema
                  |
-                 |${schema.asJson}
+                 |${schemaTest.schema}
                  |
                  |Test:       ${singleTest.description} ${testIdx + 1}/${schemaTest.tests.size}
-                 |Schema:      ${schema.description.description} (${schemaIdx + 1} / ${suite.size})
+                 |Used Schema:
+                 |
+                 |${validator.mainSchema.asJson}
+                 |
+                 |Schema:      ${validator.mainSchema.description.description} (${schemaIdx + 1} / ${suite.size})
                  |SchemaTest:  ${schemaTest.description}
                  |
                  |
