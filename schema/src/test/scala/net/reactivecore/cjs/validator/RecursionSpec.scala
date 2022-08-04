@@ -2,7 +2,7 @@ package net.reactivecore.cjs.validator
 
 import io.circe.{Json, parser}
 import net.reactivecore.cjs.resolver.RefUri
-import net.reactivecore.cjs.{DocumentValidator, Schema, TestBase}
+import net.reactivecore.cjs.{DocumentValidator, Loader, Schema, TestBase}
 
 class RecursionSpec extends TestBase {
 
@@ -41,8 +41,7 @@ class RecursionSpec extends TestBase {
   }
 
   "simple recursion" should "work" in {
-    val schema = parser.parse(simpleRecursion).forceRight.as[Schema].forceRight
-    val validator = schema.emptyResolve.forceRight
+    val validator = Loader.empty.fromJson(simpleRecursion).forceRight
 
     validator.context.resolve(RefUri.forceString("#")).forceRight shouldBe validator.roots.head._2.validator
 

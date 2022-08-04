@@ -107,3 +107,9 @@ case class Loader[F[_]](
     )
   }
 }
+
+object Loader {
+
+  /** Returns a Loader with disabled Downloading. */
+  def empty: Loader[Result] = Loader(Downloader.emptySimple)
+}
