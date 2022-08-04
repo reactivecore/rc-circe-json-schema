@@ -49,7 +49,7 @@ sealed trait Schema {
 
     for {
       resolvedJson <- resolver.resolve(json)
-      built <- DocumentValidator.build(resolvedJson) match {
+      built <- DocumentValidator.fromResolved(resolvedJson) match {
         case Left(err) =>
           applicativeError.raiseError(ResolveFailure(s"Could not parse resolved json: ${err}"))
         case Right(ok) => applicativeError.pure(ok)

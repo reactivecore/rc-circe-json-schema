@@ -20,7 +20,7 @@ object Downloaded extends App {
     }
   }
 
-  val validator = Loader.loadUrl(jsonSchemaUrl, downloader).right.get
+  val validator = Loader(downloader).fromUrl(jsonSchemaUrl).right.get
 
   def test(s: Json): Unit = {
     val result = validator.validate(s)

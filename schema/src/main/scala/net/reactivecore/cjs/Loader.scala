@@ -9,8 +9,14 @@ import net.reactivecore.cjs.resolver.{Downloader, Resolved, Resolver}
 
 import scala.language.{existentials, higherKinds}
 
-/** Combines the different steps to build a SchemaValidator from JSON */
-class Loader[F[_]](
+/** Combines the different steps to build a SchemaValidator from JSON.
+  *
+  * Main entry point into handling JSON Schemas.
+  *
+  * @param downloader the downloader to download referenced schemas or meta schemas
+  * @param defaultVocabulary the default vocabulary to use if none is given
+  */
+case class Loader[F[_]](
     downloader: Downloader[F],
     defaultVocabulary: Vocabulary = Vocabularies.vocabulary2020
 )(
@@ -35,7 +41,7 @@ class Loader[F[_]](
       resolver = new Resolver(downloader, Some(vocabulary.filter))
       resolved <- resolver.resolve(appliedVocabulary)
       resolvedAfterVocabulary = filterWithVocabulary(resolved, vocabulary)
-      documentValidator <- monad.fromEither(DocumentValidator.build(resolvedAfterVocabulary))
+      documentValidator <- monad.fromEither(DocumentValidator.fromResolved(resolvedAfterVocabulary))
     } yield {
       documentValidator
     }
@@ -99,17 +105,5 @@ class Loader[F[_]](
     resolved.copy(
       roots = resolved.roots.mapValues(vocabulary.filter).view.toMap
     )
-  }
-}
-
-object Loader {
-
-  /** Load and resolve a JSON Schema from an URL and build a DocumentValidator. */
-  def loadUrl[F[_]](
-      url: String,
-      downloader: Downloader[F],
-      defaultVocabulary: Vocabulary = Vocabularies.vocabulary2020
-  )(implicit monadError: MonadError[F, Failure]): F[DocumentValidator] = {
-    new Loader(downloader, defaultVocabulary).fromUrl(url)
   }
 }

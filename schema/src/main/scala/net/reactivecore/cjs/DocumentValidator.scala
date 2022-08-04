@@ -97,7 +97,7 @@ case class DocumentValidator(
 object DocumentValidator {
 
   /** Build Root Valdiator from Resolved data. */
-  def build(resolved: Resolved): Either[Failure, DocumentValidator] = {
+  def fromResolved(resolved: Resolved): Either[Failure, DocumentValidator] = {
     resolved.roots
       .map { case (id, json) =>
         json.as[Schema].map { schema =>
@@ -110,17 +110,6 @@ object DocumentValidator {
       case Right(ok) =>
         val asMap = ok.toMap
         Right(DocumentValidator(resolved.main, asMap))
-    }
-  }
-
-  /** Convenience method for Parsing and Resolving a Schema. */
-  def parseAndResolveJson[F[_]](
-      schemaJson: String,
-      downloader: Downloader[F]
-  )(implicit applicativeError: MonadError[F, Failure]): F[DocumentValidator] = {
-    parse(schemaJson) match {
-      case Left(err)     => applicativeError.raiseError(ResolveFailure(s"Parsing error: ${err.getMessage}"))
-      case Right(schema) => schema.resolve(downloader)
     }
   }
 }
