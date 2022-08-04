@@ -119,7 +119,7 @@ class Resolver[F[_]](downloader: Downloader[F], jsonFilter: Option[Json => Json]
       val position = subId.getOrElse(parentId)
 
       val reference = resolvable.`$ref`.map { ref =>
-        subId.getOrElse(parentId).resolve(ref)
+        position.resolve(ref)
       }
 
       val absoluteId = subId.map(_.copy(fragment = None))

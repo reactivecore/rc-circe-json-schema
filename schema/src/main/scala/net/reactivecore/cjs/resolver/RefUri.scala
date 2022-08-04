@@ -12,30 +12,44 @@ case class RefUri(
     port: Option[Int] = None,
     path: Option[String] = None,
     query: Option[String] = None,
-    fragment: Option[String] = None
+    fragment: Option[String] = None,
+    schemeSpecificPart: Option[String] = None
 ) {
 
   /** Converts to Java URI */
   def toUri: URI = {
-    new URI(
-      scheme.orNull,
-      userInfo.orNull,
-      host.orNull,
-      port match {
-        case None    => -1
-        case Some(n) => n
-      },
-      path.orNull,
-      query.orNull,
-      fragment.orNull
-    )
+    schemeSpecificPart match {
+      case Some(given) => new URI(scheme.orNull, given, fragment.orNull)
+      case None =>
+        new URI(
+          scheme.orNull,
+          userInfo.orNull,
+          host.orNull,
+          port match {
+            case None    => -1
+            case Some(n) => n
+          },
+          path.orNull,
+          query.orNull,
+          fragment.orNull
+        )
+    }
   }
 
   /** Resolve an uri. */
   def resolve(other: RefUri): RefUri = {
+    /* Workaround for resolving pure fragments on URN-Uris, otherwise it would just return other */
+    if (other.fragment.exists(_.nonEmpty) && other.copy(fragment = None).isEmpty) {
+      return copy(fragment = other.fragment)
+    }
     RefUri.fromUri(
       toUri.resolve(other.toUri)
     )
+  }
+
+  /** Returns true if this RefUri is empty. */
+  def isEmpty: Boolean = {
+    this == RefUri.empty
   }
 
   /** Resolve if other is set (convenience function) */
@@ -68,6 +82,8 @@ case class RefUri(
 
 object RefUri {
 
+  def empty: RefUri = RefUri()
+
   def fromString(s: String): Either[String, RefUri] = {
     try {
       Right(forceString(s))
@@ -88,7 +104,8 @@ object RefUri {
       port = Some(uri.getPort).filter(_ != -1),
       path = Option(uri.getPath).filter(_.nonEmpty),
       query = Option(uri.getQuery),
-      fragment = Option(uri.getFragment)
+      fragment = Option(uri.getFragment),
+      schemeSpecificPart = Option(uri.getSchemeSpecificPart).filter(_.nonEmpty)
     )
   }
 

@@ -23,7 +23,10 @@ class DownloaderMock extends Downloader[Result] {
         .collectFirst {
           case (prefix, path) if url.startsWith(prefix) => path + url.stripPrefix(prefix)
         }
-        .toRight(ResolveFailure(s"File ${url} not found"))
+        .toRight {
+          println("Not found")
+          ResolveFailure(s"File ${url} not found")
+        }
       content <- Try(
         FileUtils.readFileToString(new File(DownloaderMock.baseDir, location), StandardCharsets.UTF_8)
       ).toEither.left
