@@ -11,17 +11,15 @@ Note: the validator is in early state and API may not be stable.
 ## Features
 
 - Implementing JSON Schema 2020-12, 2019-09
-- All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing (except `vocabulary.json`)
+- All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing
 - You can bring your own Downloader (using Tagless Final Pattern)
 
 ## Known Limitations
 
-- `dynamicRef` and `dynamicAnchor` are very rough implemented, do not trust them.
+- `dynamicRef` and `dynamicAnchor` are very rough implemented
 - Unknown Keywords are ignored and won't be serialized again.
-- No support for `$vocabulary`
-- JSON Pointers to elements outside of `$defs` are not fully implemented, except when required by the test suite.
 - Only JSON Schema 2020-12, 2019-09 and one Circe-Version supported so far.
-- The API won't be stable.
+- The API will only be stable in patch versions
 
 ## Security Considerations
 
