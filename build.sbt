@@ -1,6 +1,8 @@
 lazy val scala212 = "2.12.15"
 lazy val scala213 = "2.13.8"
-lazy val supportedScalaVersions = List(scala212, scala213)
+lazy val scala3 = "3.2.1"
+
+lazy val supportedScalaVersions = List(scala212, scala213, scala3)
 
 ThisBuild / scalaVersion := scala212
 
@@ -9,7 +11,7 @@ ThisBuild / organization := "net.reactivecore"
 ThisBuild / fork := false
 ThisBuild / Test / fork := true
 
-val circeVersion = "0.14.1"
+val circeVersion = "0.14.3"
 
 git.baseVersion := "0.3"
 
@@ -30,7 +32,8 @@ ThisBuild / developers := List(
 usePgpKeyHex("77D0E9E04837F8CBBCD56429897A43978251C225")
 
 val testDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.0.9" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.14" % Test,
+  "org.scalatest" %% "scalatest-flatspec" % "3.2.14" % Test,
   "commons-io" % "commons-io" % "2.8.0" % Test
 )
 

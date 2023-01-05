@@ -42,19 +42,17 @@ object ValidationProvider {
   implicit def forOptionalField[T, V](
       implicit fieldProvider: ValidationProvider[ValidatingField[T, V]]
   ): ValidationProvider[Option[ValidatingField[T, V]]] = { (origin, value) =>
-    value match {
-      case None        => Validator.success
-      case Some(given) => fieldProvider.apply(origin, given)
-    }
+    value.map(fieldProvider(origin, _)).getOrElse(Validator.success)
   }
 
   implicit def forOptionalFieldWithContext[T, V, C](
       implicit fieldProvider: ValidationProvider[(ValidatingField[T, V], C)]
   ): ValidationProvider[(Option[ValidatingField[T, V]], C)] = { (origin, value) =>
-    value._1 match {
-      case None        => Validator.success
-      case Some(given) => fieldProvider.apply(origin, (given, value._2))
-    }
+    value._1
+      .map { v1 =>
+        fieldProvider(origin, (v1, value._2))
+      }
+      .getOrElse(Validator.success)
   }
 
   /** Helper trait for synthetic validation provider for case classes */

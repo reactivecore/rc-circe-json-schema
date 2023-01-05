@@ -19,7 +19,7 @@ case class RefUri(
   /** Converts to Java URI */
   def toUri: URI = {
     schemeSpecificPart match {
-      case Some(given) => new URI(scheme.orNull, given, fragment.orNull)
+      case Some(value) => new URI(scheme.orNull, value, fragment.orNull)
       case None =>
         new URI(
           scheme.orNull,

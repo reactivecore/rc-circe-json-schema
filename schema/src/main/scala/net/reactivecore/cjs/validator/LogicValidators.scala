@@ -100,15 +100,9 @@ case class IfThenElseValidator(
   ): (ValidationState, ValidationResult) = {
     val (ifState, ifValidated) = ifClause.validateStateful(state, json)
     if (ifValidated.isSuccess) {
-      thenClause match {
-        case Some(given) => given.validateStateful(ifState, json)
-        case None        => (ifState, ValidationResult.success)
-      }
+      thenClause.map(_.validateStateful(ifState, json)).getOrElse(ifState -> ValidationResult.success)
     } else {
-      elseClause match {
-        case Some(given) => given.validateStateful(state, json)
-        case None        => (ifState, ValidationResult.success)
-      }
+      elseClause.map(_.validateStateful(ifState, json)).getOrElse(ifState -> ValidationResult.success)
     }
   }
 

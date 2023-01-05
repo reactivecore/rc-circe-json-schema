@@ -17,11 +17,8 @@ case class SingleDocumentValidator(
     val collector = mutable.Map[String, Validator]()
     validator.wideForeach {
       case v: SchemaValidator =>
-        v.dynamicFragment match {
-          case Some(given) if !collector.contains(given) =>
-            collector += (given -> v)
-          case Some(given) => // nothing
-          case None        => // nothing
+        v.dynamicFragment.filterNot(collector.contains).foreach { fragment =>
+          collector += (fragment -> v)
         }
       case _ => None
     }

@@ -7,7 +7,7 @@ import net.reactivecore.cjs.validator.{EnumValidator, ValidationProvider, Valida
 import net.reactivecore.cjs.DataTypeName
 
 case class EnumRestriction(
-    enum: OValidatingField[Vector[Json], EnumValidator] = None
+    `enum`: OValidatingField[Vector[Json], EnumValidator] = None
 )
 
 object EnumRestriction {

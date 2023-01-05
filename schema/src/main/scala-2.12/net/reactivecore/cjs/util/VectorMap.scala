@@ -6,7 +6,7 @@ import scala.collection.generic.{CanBuildFrom, MapFactory}
 import scala.collection.immutable.MapLike
 import scala.collection.{GenTraversableOnce, mutable}
 
-/** Encodes a JSON Map into a vector of keys and values */
+/** Encodes a Map into a vector of keys and values */
 case class VectorMap[K, +T](
     underlying: Vector[(K, T)]
 ) extends Map[K, T]
