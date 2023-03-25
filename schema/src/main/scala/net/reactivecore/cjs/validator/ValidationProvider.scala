@@ -3,7 +3,6 @@ package net.reactivecore.cjs.validator
 import net.reactivecore.cjs.SchemaOrigin
 import net.reactivecore.cjs.restriction.ValidatingField
 import net.reactivecore.cjs.validator.impl.{CombinedValidationProvider, VisitingSequentialProvider}
-import shapeless._
 
 /** Typeclass which provides Validators for Restrictions.
   * @tparam T the data from which a validator is created. Some validation providers can automatically be deduced from
@@ -67,5 +66,5 @@ object ValidationProvider {
     * Generate a validation provider for a case class building up from perhaps context-aware Validation Providers.
     * Each sub field's name will be visited
     */
-  def visitingSequental[T](implicit p: VisitingSequentialProvider[T]): ValidationProvider[T] = p.apply
+  def visitingSequental[T](implicit p: VisitingSequentialProvider[T]): ValidationProvider[T] = p
 }
