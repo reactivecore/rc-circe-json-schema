@@ -1,8 +1,8 @@
 package net.reactivecore.cjs.restriction
 
 import io.circe.{Codec, Decoder, Encoder}
+import net.reactivecore.cjs.validator.impl.TrivialValidationFieldProvider
 import net.reactivecore.cjs.validator.{ValidationProvider, Validator}
-import shapeless._
 
 /**
   * A Single field inside a Restriction
@@ -14,11 +14,10 @@ case class ValidatingField[T, V](value: T) extends AnyVal
 
 object ValidatingField {
 
-  /** Provides a validation provider for Validators which just take the value */
-  implicit def trivialValidationProvider[T, V <: Validator](
-      implicit generic: Generic.Aux[V, T :: HNil]
+  implicit def trivial[T, V <: Validator](
+      implicit t: TrivialValidationFieldProvider[T, V]
   ): ValidationProvider[ValidatingField[T, V]] = { (_, value) =>
-    generic.from(value.value :: HNil)
+    t.provide(value.value)
   }
 
   /** Empty validation providers for fields which do not have one. */
