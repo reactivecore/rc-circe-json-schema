@@ -1,9 +1,10 @@
 package net.reactivecore.cjs
 
 import io.circe.Json
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-abstract class TestBase extends FlatSpec with Matchers with EitherExt.ImplicitsForTest {
+abstract class TestBase extends AnyFlatSpec with Matchers with EitherExt.ImplicitsForTest {
 
   def ensureJsonEqual(left: Json, right: Json): Unit = {
     if (left != right) {
