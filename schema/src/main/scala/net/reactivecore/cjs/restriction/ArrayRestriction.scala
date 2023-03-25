@@ -42,7 +42,8 @@ object ArrayRestriction {
     Codecs.disjunctEitherCodec[Schema, Vector[Schema]]
   }
 
-  implicit lazy val codec: Codec.AsObject[ArrayRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
+  implicit lazy val codec: Codec.AsObject[ArrayRestriction] =
+    Codecs.withoutNulls(semiauto.deriveCodec[ArrayRestriction])
 
   // Support for Items (can be 2019 or 2020)
   case object Items
@@ -58,7 +59,8 @@ object ArrayRestriction {
 
   // Support for AdditionalItems
   object AdditionalItems
-  implicit val additionalItemsProvider =
+  implicit val additionalItemsProvider
+      : ValidationProvider[(ValidatingField[Schema, AdditionalItems.type], ArrayRestriction)] =
     ValidationProvider.forFieldWithContext[Schema, AdditionalItems.type, ArrayRestriction] { (origin, value, context) =>
       // V2019, additionalItems is only used if items is given
       if (context.v2019Items.isDefined) {

@@ -4,7 +4,7 @@ lazy val scala3 = "3.2.2"
 
 lazy val supportedScalaVersions = List(scala212, scala213, scala3)
 
-ThisBuild / scalaVersion := scala212
+ThisBuild / scalaVersion := scala3
 
 ThisBuild / organization := "net.reactivecore"
 
