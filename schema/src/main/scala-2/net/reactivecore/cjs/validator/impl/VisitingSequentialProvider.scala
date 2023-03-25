@@ -6,24 +6,17 @@ import shapeless._
 import shapeless.labelled.FieldType
 
 /** Typeclass for generating Visiting-Sequential Validation Provider */
-trait VisitingSequentialProvider[C] {
-  def apply: ValidationProvider[C]
-}
+trait VisitingSequentialProvider[C] extends ValidationProvider[C]
 
 object VisitingSequentialProvider {
   implicit def generate[C, G](
       implicit labelledGeneric: LabelledGeneric.Aux[C, G],
       helper: VisitingSequentialHelper[G, C]
-  ): VisitingSequentialProvider[C] = {
-    new VisitingSequentialProvider[C] {
-      override def apply: ValidationProvider[C] = { (origin: SchemaOrigin, restriction: C) =>
-        {
-          helper.apply(restriction).apply(origin, labelledGeneric.to(restriction))
-        }
-      }
+  ): VisitingSequentialProvider[C] = { (origin: SchemaOrigin, restriction: C) =>
+    {
+      helper.apply(restriction).apply(origin, labelledGeneric.to(restriction))
     }
   }
-
 
   /**
     * Helper for generating [[visitingSequental]]
@@ -39,9 +32,9 @@ object VisitingSequentialProvider {
     implicit def hnilHelper[C]: VisitingSequentialHelper[HNil, C] = (_: C) => ValidationProvider.empty
 
     implicit def hlistHelper[K <: Symbol, H, T <: HList, V <: Validator, C](
-      implicit p: ValidationProvider[H],
-      tailHelper: VisitingSequentialHelper[T, C],
-      w: Witness.Aux[K]
+        implicit p: ValidationProvider[H],
+        tailHelper: VisitingSequentialHelper[T, C],
+        w: Witness.Aux[K]
     ): VisitingSequentialHelper[FieldType[K, H] :: T, C] =
       new VisitingSequentialHelper[FieldType[K, H] :: T, C] {
         val fieldName = w.value.name
@@ -57,9 +50,9 @@ object VisitingSequentialProvider {
       }
 
     implicit def hlistHelperWithContext[K <: Symbol, H, T <: HList, V <: Validator, C](
-      implicit p: ValidationProvider[(H, C)],
-      tailHelper: VisitingSequentialHelper[T, C],
-      w: Witness.Aux[K]
+        implicit p: ValidationProvider[(H, C)],
+        tailHelper: VisitingSequentialHelper[T, C],
+        w: Witness.Aux[K]
     ): VisitingSequentialHelper[FieldType[K, H] :: T, C] =
       new VisitingSequentialHelper[FieldType[K, H] :: T, C] {
         val fieldName = w.value.name
