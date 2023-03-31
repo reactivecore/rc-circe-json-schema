@@ -10,6 +10,7 @@ import net.reactivecore.cjs.validator.{
   Validator,
   Violation
 }
+import net.reactivecore.cjs.restriction.ValidatingField
 
 case class PrefixValidator(prefix: Vector[Validator]) extends ArrayValidator {
 
@@ -38,5 +39,6 @@ object PrefixValidator {
     PrefixValidator(prefixValidators)
   }
 
-  implicit val provider = ValidationProvider.forField[Vector[Schema], PrefixValidator](PrefixValidator.apply)
+  implicit val provider: ValidationProvider[ValidatingField[Vector[Schema], PrefixValidator]] =
+    ValidationProvider.forField[Vector[Schema], PrefixValidator](PrefixValidator.apply)
 }

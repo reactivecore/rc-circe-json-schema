@@ -12,6 +12,7 @@ import net.reactivecore.cjs.validator.{
 }
 
 import java.util.regex.Pattern
+import net.reactivecore.cjs.restriction.ValidatingField
 
 case class PatternPropertiesValidator(regexSchemas: Vector[(Pattern, Validator)]) extends ObjectValidator {
   override def validateStatefulObject(state: ValidationState, json: JsonObject)(
@@ -35,11 +36,11 @@ case class PatternPropertiesValidator(regexSchemas: Vector[(Pattern, Validator)]
 }
 
 object PatternPropertiesValidator {
-  implicit val provider = ValidationProvider.forField[VectorMap[String, Schema], PatternPropertiesValidator] {
-    (origin, patternProperties) =>
+  implicit val provider: ValidationProvider[ValidatingField[VectorMap[String, Schema], PatternPropertiesValidator]] =
+    ValidationProvider.forField[VectorMap[String, Schema], PatternPropertiesValidator] { (origin, patternProperties) =>
       val regexSchemas: Vector[(Pattern, Validator)] = patternProperties.toVector.map { case (pattern, schema) =>
         Pattern.compile(pattern) -> schema.validator(origin)
       }
       PatternPropertiesValidator(regexSchemas)
-  }
+    }
 }

@@ -3,6 +3,7 @@ import io.circe.{Json, JsonObject}
 import net.reactivecore.cjs.Schema
 import net.reactivecore.cjs.util.VectorMap
 import net.reactivecore.cjs.validator._
+import net.reactivecore.cjs.restriction.ValidatingField
 
 case class DependentSchemasValidator(withSchemas: Map[String, Validator]) extends ObjectValidator {
   override def validateStatefulObject(state: ValidationState, json: JsonObject)(
@@ -16,7 +17,7 @@ case class DependentSchemasValidator(withSchemas: Map[String, Validator]) extend
 }
 
 object DependentSchemasValidator {
-  implicit val provider = ValidationProvider.forField[VectorMap[String, Schema], DependentSchemasValidator] {
+  implicit val provider: ValidationProvider[ValidatingField[VectorMap[String, Schema], DependentSchemasValidator]] = ValidationProvider.forField[VectorMap[String, Schema], DependentSchemasValidator] {
     (origin, dependentSchemas) =>
       val withSchemas = dependentSchemas.mapValues(_.validator(origin)).view.toMap
       DependentSchemasValidator(withSchemas)

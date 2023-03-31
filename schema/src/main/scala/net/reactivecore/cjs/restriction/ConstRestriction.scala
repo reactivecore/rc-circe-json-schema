@@ -23,5 +23,5 @@ object ConstRestriction {
 
   implicit val codec: Codec.AsObject[ConstRestriction] = Codec.AsObject.from(decoder, encoder)
 
-  implicit val validationProvider = ValidationProvider.visitingSequental[ConstRestriction]
+  implicit val validationProvider: ValidationProvider[ConstRestriction] = ValidationProvider.visitingSequental[ConstRestriction]
 }
