@@ -59,6 +59,7 @@ object ValidationProvider {
     v(origin, value._1)
   }
 
+
   /**
     * Generates a simple sequence validation provider for generic types.
     * (all types are evaluated without entering an object)

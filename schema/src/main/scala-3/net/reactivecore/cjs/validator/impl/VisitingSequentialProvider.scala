@@ -33,4 +33,5 @@ object VisitingSequentialProvider {
         first :: last
     }
   }
+
 }

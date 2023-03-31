@@ -31,24 +31,6 @@ object VisitingSequentialProvider {
   object VisitingSequentialHelper {
     implicit def hnilHelper[C]: VisitingSequentialHelper[HNil, C] = (_: C) => ValidationProvider.empty
 
-    implicit def hlistHelper[K <: Symbol, H, T <: HList, V <: Validator, C](
-        implicit p: ValidationProvider[H],
-        tailHelper: VisitingSequentialHelper[T, C],
-        w: Witness.Aux[K]
-    ): VisitingSequentialHelper[FieldType[K, H] :: T, C] =
-      new VisitingSequentialHelper[FieldType[K, H] :: T, C] {
-        val fieldName = w.value.name
-
-        override def apply(context: C): ValidationProvider[FieldType[K, H] :: T] = {
-          ValidationProvider.withOrigin { (origin, value) =>
-            Validator.sequence(
-              p(origin.enterObject(fieldName), value.head),
-              tailHelper.apply(context)(origin, value.tail)
-            )
-          }
-        }
-      }
-
     implicit def hlistHelperWithContext[K <: Symbol, H, T <: HList, V <: Validator, C](
         implicit p: ValidationProvider[(H, C)],
         tailHelper: VisitingSequentialHelper[T, C],
