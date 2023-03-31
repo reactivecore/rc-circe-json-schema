@@ -18,18 +18,20 @@ object TrivialValidationFieldProvider {
     * (Ok, that's a bit hacky)
     */
   implicit inline def trivialValidationProvider[T, V <: Validator](using m: Mirror.ProductOf[V]): TrivialValidationFieldProvider[T, V] = {
-    val b = singleBuilder[T, V]
+    val b = singleBuilder[T, m.MirroredElemTypes]
     new TrivialValidationFieldProvider[T, V] {
         def provide(value: T): V = {
-          b(value)
+          m.fromTuple(b(value))
         }
     }
   }
 
-  private inline def singleBuilder[T, V](using m: Mirror.ProductOf[V]): T => V = {
-    inline erasedValue[m.MirroredElemTypes] match {
+
+
+  private inline def singleBuilder[T, V <: Tuple]: T => V = {
+    inline erasedValue[V] match {
       case _: (T *: EmptyTuple) =>
-        value => (value).asInstanceOf[V]
+        value => (value *: EmptyTuple).asInstanceOf[V]
     }
   }
 }
