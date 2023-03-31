@@ -1,6 +1,9 @@
 package net.reactivecore.cjs.validator.impl
 
 import net.reactivecore.cjs.validator.Validator
+import scala.deriving.Mirror
+import scala.compiletime.{erasedValue, summonInline}
+
 
 /** Helper type class which is present when a validator V can be instantiated on
   * one single value T
@@ -14,7 +17,19 @@ object TrivialValidationFieldProvider {
   /** Generate from  it, if the Validator class has only a single field.
     * (Ok, that's a bit hacky)
     */
-  implicit inline def trivialValidationProvider[T, V <: Validator]: TrivialValidationFieldProvider[T, V] = {
-    ???
+  implicit inline def trivialValidationProvider[T, V <: Validator](using m: Mirror.ProductOf[V]): TrivialValidationFieldProvider[T, V] = {
+    val b = singleBuilder[T, V]
+    new TrivialValidationFieldProvider[T, V] {
+        def provide(value: T): V = {
+          b(value)
+        }
+    }
+  }
+
+  private inline def singleBuilder[T, V](using m: Mirror.ProductOf[V]): T => V = {
+    inline erasedValue[m.MirroredElemTypes] match {
+      case _: (T *: EmptyTuple) =>
+        value => (value).asInstanceOf[V]
+    }
   }
 }
