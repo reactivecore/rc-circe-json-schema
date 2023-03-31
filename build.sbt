@@ -4,14 +4,14 @@ lazy val scala3 = "3.2.2"
 
 lazy val supportedScalaVersions = List(scala212, scala213, scala3)
 
-ThisBuild / scalaVersion := scala213
+ThisBuild / scalaVersion := scala3
 
 ThisBuild / organization := "net.reactivecore"
 
 ThisBuild / fork := false
 ThisBuild / Test / fork := true
 
-val circeVersion = "0.14.3"
+val circeVersion = "0.14.5"
 
 git.baseVersion := "0.3"
 
@@ -33,9 +33,9 @@ ThisBuild / testOptions  += Tests.Argument("-oDF")
 usePgpKeyHex("77D0E9E04837F8CBBCD56429897A43978251C225")
 
 val testDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.2.14" % Test,
-  "org.scalatest" %% "scalatest-flatspec" % "3.2.14" % Test,
-  "commons-io" % "commons-io" % "2.8.0" % Test
+  "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+  "org.scalatest" %% "scalatest-flatspec" % "3.2.15" % Test,
+  "commons-io" % "commons-io" % "2.11.0" % Test
 )
 
 lazy val schema = (project in file("schema"))
