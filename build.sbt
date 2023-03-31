@@ -13,7 +13,7 @@ ThisBuild / Test / fork := true
 
 val circeVersion = "0.14.5"
 
-git.baseVersion := "0.3"
+git.baseVersion := "0.4"
 
 enablePlugins(GitVersioning)
 
