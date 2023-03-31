@@ -25,7 +25,7 @@ Note: the validator is in early state and API may not be stable.
 
 ## Security Considerations
 
-Regex Patterns are directly given to `java.util.regex.Pattern.compile`. This could be not secure and could lead to [ReDoS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) Attacks.
+Regex Patterns are directly given to `java.util.regex.Pattern.compile`. This could be not secure and could lead to [ReDoS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) Attacks. Do not trust JSON schemas from an untrusted source.
 
 **Only use this library for trusted JSON-Schemas**
 
