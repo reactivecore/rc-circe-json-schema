@@ -33,9 +33,9 @@ class RecursionSpec extends TestBase {
   ): Unit = {
     withClue(s"Validating ${json} should succeed ${mustSucceed}") {
       if (mustSucceed) {
-        validator.validate(json) shouldBe 'success
+        validator.validate(json).isSuccess shouldBe true
       } else {
-        validator.validate(json) shouldBe 'failure
+        validator.validate(json).isFailure shouldBe true
       }
     }
   }

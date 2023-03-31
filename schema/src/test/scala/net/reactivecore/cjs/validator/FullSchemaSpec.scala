@@ -22,12 +22,12 @@ class FullSchemaSpec extends TestBase {
   }
 
   it should "figure out when it's ok" in new Env {
-    documentValidator.validate(parser.parse(sampleOk).forceRight) shouldBe 'success
+    documentValidator.validate(parser.parse(sampleOk).forceRight).isSuccess shouldBe true
   }
 
   for { bad <- Seq(sampleBad1, sampleBad2) } {
     it should s"figure out ${bad} is not ok" in new Env {
-      documentValidator.validate(parser.parse(bad).forceRight) shouldBe 'failure
+      documentValidator.validate(parser.parse(bad).forceRight).isFailure shouldBe true
     }
   }
 }

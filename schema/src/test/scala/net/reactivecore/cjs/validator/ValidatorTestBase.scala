@@ -12,11 +12,11 @@ abstract class ValidatorTestBase extends TestBase {
     val violations = documentValidator.validate(parsedSample)
     if (isValid) {
       withClue(s"${test} should be valid") {
-        violations shouldBe 'success
+        violations.isSuccess shouldBe true
       }
     } else {
       withClue(s"${test} shouldNot be valid") {
-        violations shouldBe 'failure
+        violations.isFailure shouldBe true
       }
     }
   }

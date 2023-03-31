@@ -18,7 +18,7 @@ object EnumRestriction {
   )
 
   implicit val typeCodec: Codec[TypeOrTypes] = Codecs.disjunctEitherCodec[DataTypeName, Vector[DataTypeName]]
-  implicit val codec: Codec.AsObject[EnumRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
+  implicit val codec: Codec.AsObject[EnumRestriction] = Codecs.withoutNulls(semiauto.deriveCodec[EnumRestriction])
 
   implicit val validationProvider: ValidationProvider[EnumRestriction] = ValidationProvider.visitingSequental
 }
