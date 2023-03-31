@@ -30,5 +30,4 @@ object CombinedValidationProvider {
         first :: last
     }
   }
-
 }

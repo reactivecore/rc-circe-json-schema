@@ -54,6 +54,11 @@ object ValidationProvider {
       .getOrElse(Validator.success)
   }
 
+  /** Automatically provides a context aware ValidationProvider, if there is one, which doesn't need it */
+  implicit def withContext[T, C](implicit v: ValidationProvider[T]): ValidationProvider[(T, C)] = { (origin, value) =>
+    v(origin, value._1)
+  }
+
   /**
     * Generates a simple sequence validation provider for generic types.
     * (all types are evaluated without entering an object)
