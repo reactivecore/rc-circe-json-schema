@@ -14,5 +14,7 @@ object TrivialValidationFieldProvider {
   /** Generate from  it, if the Validator class has only a single field.
     * (Ok, that's a bit hacky)
     */
-  implicit def trivialValidationProvider[T, V <: Validator]: TrivialValidationFieldProvider[T, V] = ???
+  implicit inline def trivialValidationProvider[T, V <: Validator]: TrivialValidationFieldProvider[T, V] = {
+    ???
+  }
 }

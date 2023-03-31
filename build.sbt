@@ -28,6 +28,7 @@ ThisBuild / developers := List(
     url = url("https://www.reactivecore.de")
   )
 )
+ThisBuild / testOptions  += Tests.Argument("-oDF")
 
 usePgpKeyHex("77D0E9E04837F8CBBCD56429897A43978251C225")
 

@@ -21,7 +21,7 @@ object CombinedValidationProvider {
     }
   }
 
-  private inline def provideForTuple[T <: Tuple]: List[ValidationProvider[Any]] = {
+  private[impl] inline def provideForTuple[T <: Tuple]: List[ValidationProvider[Any]] = {
     inline erasedValue[T] match {
       case _: EmptyTuple => Nil
       case _: (t *: ts) =>
