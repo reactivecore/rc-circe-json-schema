@@ -3,6 +3,7 @@ package net.reactivecore.cjs.validator.array
 import io.circe.Json
 import net.reactivecore.cjs.Schema
 import net.reactivecore.cjs.validator._
+import net.reactivecore.cjs.restriction.ValidatingField
 
 case class UnevaluatedItemsValidator(underlying: Validator) extends ArrayValidator {
   override def validateArrayStateful(
@@ -25,7 +26,7 @@ case class UnevaluatedItemsValidator(underlying: Validator) extends ArrayValidat
 }
 
 object UnevaluatedItemsValidator {
-  implicit val provider = ValidationProvider.forField[Schema, UnevaluatedItemsValidator] { (origin, schema) =>
+  implicit val provider: ValidationProvider[ValidatingField[Schema, UnevaluatedItemsValidator]] = ValidationProvider.forField[Schema, UnevaluatedItemsValidator] { (origin, schema) =>
     UnevaluatedItemsValidator(schema.validator(origin))
   }
 }

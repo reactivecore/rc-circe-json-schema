@@ -13,6 +13,8 @@ Note: the validator is in early state and API may not be stable.
 - Implementing JSON Schema 2020-12, 2019-09
 - All tests of the [JSON Schema Test Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite) passing
 - You can bring your own Downloader (using Tagless Final Pattern)
+- Support for Scala 2.12, 2.13 and **3**
+
 
 ## Known Limitations
 
@@ -23,7 +25,7 @@ Note: the validator is in early state and API may not be stable.
 
 ## Security Considerations
 
-Regex Patterns are directly given to `java.util.regex.Pattern.compile`. This could be not secure and could lead to [ReDoS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) Attacks.
+Regex Patterns are directly given to `java.util.regex.Pattern.compile`. This could be not secure and could lead to [ReDoS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) Attacks. Do not trust JSON schemas from an untrusted source.
 
 **Only use this library for trusted JSON-Schemas**
 

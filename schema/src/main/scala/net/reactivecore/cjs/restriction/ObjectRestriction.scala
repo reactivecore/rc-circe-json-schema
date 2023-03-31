@@ -21,7 +21,7 @@ case class ObjectRestriction(
 )
 
 object ObjectRestriction {
-  implicit lazy val codec: Codec.AsObject[ObjectRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
+  implicit lazy val codec: Codec.AsObject[ObjectRestriction] = Codecs.withoutNulls(semiauto.deriveCodec[ObjectRestriction])
 
   implicit val validationProvider: ValidationProvider[ObjectRestriction] =
     ValidationProvider.visitingSequental[ObjectRestriction]

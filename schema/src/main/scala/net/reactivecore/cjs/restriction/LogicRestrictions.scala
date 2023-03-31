@@ -19,7 +19,7 @@ case class LogicRestrictions(
 )
 
 object LogicRestrictions {
-  implicit lazy val codec: Codec.AsObject[LogicRestrictions] = Codecs.withoutNulls(semiauto.deriveCodec)
+  implicit lazy val codec: Codec.AsObject[LogicRestrictions] = Codecs.withoutNulls(semiauto.deriveCodec[LogicRestrictions])
 
   implicit lazy val validationProvider: ValidationProvider[LogicRestrictions] = ValidationProvider.withOrigin {
     (context, restrictions) =>

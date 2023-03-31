@@ -10,6 +10,7 @@ import net.reactivecore.cjs.validator.{
   Validator,
   Violation
 }
+import net.reactivecore.cjs.restriction.ValidatingField
 
 case class PropertyNamesValidator(validator: Validator) extends ObjectValidator {
   override def validateStatefulObject(state: ValidationState, json: JsonObject)(
@@ -25,7 +26,8 @@ case class PropertyNamesValidator(validator: Validator) extends ObjectValidator 
 }
 
 object PropertyNamesValidator {
-  implicit val provider = ValidationProvider.forField[Schema, PropertyNamesValidator] { (origin, schema) =>
-    PropertyNamesValidator(schema.validator(origin))
-  }
+  implicit val provider: ValidationProvider[ValidatingField[Schema, PropertyNamesValidator]] =
+    ValidationProvider.forField[Schema, PropertyNamesValidator] { (origin, schema) =>
+      PropertyNamesValidator(schema.validator(origin))
+    }
 }

@@ -17,7 +17,7 @@ object DataTypeRestriction {
     Encoder.encodeVector[DataTypeName]
   )
   implicit val typeCodec: Codec[TypeOrTypes] = Codecs.disjunctEitherCodec[DataTypeName, Vector[DataTypeName]]
-  implicit val codec: Codec.AsObject[DataTypeRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
+  implicit val codec: Codec.AsObject[DataTypeRestriction] = Codecs.withoutNulls(semiauto.deriveCodec[DataTypeRestriction])
 
   implicit val validationProvider: ValidationProvider[DataTypeRestriction] = ValidationProvider.visitingSequental
 }

@@ -15,7 +15,7 @@ case class NumberRestriction(
 )
 
 object NumberRestriction {
-  implicit lazy val codec: Codec.AsObject[NumberRestriction] = Codecs.withoutNulls(semiauto.deriveCodec)
+  implicit lazy val codec: Codec.AsObject[NumberRestriction] = Codecs.withoutNulls(semiauto.deriveCodec[NumberRestriction])
 
   implicit lazy val validationProvider: ValidationProvider[NumberRestriction] =
     ValidationProvider.visitingSequental[NumberRestriction]

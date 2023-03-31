@@ -65,9 +65,9 @@ abstract class ValidationSuiteBase(name: String, defaultVocabulary: Vocabulary) 
             withClue(clue) {
               validator.validate(singleTest.data)
               if (singleTest.valid) {
-                violations shouldBe 'success
+                violations.isSuccess shouldBe true
               } else {
-                violations shouldBe 'failure
+                violations.isFailure shouldBe true
               }
             }
           }
